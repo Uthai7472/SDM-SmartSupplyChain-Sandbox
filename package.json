@@ -1,0 +1,25 @@
+{
+  "name": "e-supplychain_node01",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "cookie-parser": "^1.4.6",
+    "dotenv": "^16.3.2",
+    "ejs": "^3.1.9",
+    "express": "^4.18.2",
+    "express-session": "^1.17.3",
+    "moment-timezone": "^0.5.44",
+    "mysql2": "^3.7.1",
+    "nodemon": "^3.0.3",
+    "socket.io": "^4.7.4"
+  }
+}
