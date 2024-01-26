@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <style>
+        /* h1 {
+            color: rgb(143, 229, 158);
+        } */
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="/admin_page">Home</a>
+        <a href="/admin_page/master_main">Master Main</a>
+        <a href="/admin_page/master_setting">Master Setting</a>
+        <a href="/admin_page/receive_scan_master">Receive Scan</a>
+        <a href="/logout">Logout</a>
+    </div>
+
+    <div>
+        <h1>Add Master Packing List</h1>
+    </div>
+    <div>
+        <form action="/admin_page/receive_scan_master/receive_box_complete" method="POST">
+            <label for="qr_packingList" class="form-control" name="qr_packingList">QR Packing List : <%= qr_packingList %></label>
+            <input hidden value="<%= qr_packingList %>" type="text" id="qr_packingList" class="qr_packingList form-control mb-3" name="qr_packingList">
+            <label for="qr_box" class="form-control" name="qr_box">QR Box</label>
+            <input type="text" id="qr_box" class="qr_box form-control mb-3" name="qr_box">
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+    </div>
+
+    <div>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>NO.</th>
+                        <th>QR PACKING LIST</th>
+                        <th>PART NUMBER</th>
+                        <th>PART NAME</th>
+                        <th>BOX NO.</th>
+                        <th>QTY</th>
+                        <th>COUNT BOX</th>
+                        <th>DNTH Receive</th>
+                        <!-- <th>Actions</th> -->
+                    </tr>
+                </thead>
+                <tbody>
+                    <% let count = 0; %>
+            <% let allReceived = true; %>
+            <% master_datas.forEach((master_data) => { %>
+            <tr>
+                <% count++; %>
+                <% const is_fac1_receive = master_data.is_fac1_receive.toString('hex'); %>
+                <% if (is_fac1_receive !== '01') { %>
+                    <% allReceived = false; %>
+                <% } %>
+                <td style="<% if (is_fac1_receive === '01') { %> background-color: rgb(143, 229, 158);; <% } %>"><%= count %></td>
+                <td style="<% if (is_fac1_receive === '01') { %> background-color: rgb(143, 229, 158);; <% } %>"><%= master_data.qr_packingList %></td>
+                <td style="<% if (is_fac1_receive === '01') { %> background-color: rgb(143, 229, 158);; <% } %>"><%= master_data.partNumber %></td>
+                <td style="<% if (is_fac1_receive === '01') { %> background-color: rgb(143, 229, 158);; <% } %>"><%= master_data.partName %></td>
+                <td style="<% if (is_fac1_receive === '01') { %> background-color: rgb(143, 229, 158);; <% } %>"><%= master_data.qr_box %></td>
+                <td style="<% if (is_fac1_receive === '01') { %> background-color: rgb(143, 229, 158);; <% } %>"><%= master_data.qty %></td>
+                <td style="<% if (is_fac1_receive === '01') { %> background-color: rgb(143, 229, 158);; <% } %>"><%= master_data.boxCount %></td>
+                <td style="<% if (is_fac1_receive === '01') { %> background-color: rgb(143, 229, 158);; <% } %>"><%= is_fac1_receive %></td>
+                <!-- <td>
+                    <a class="btn btn-primary" href="#">Edit</a>
+                    <a class="btn btn-secondary" onclick="confirmDelete('<%= master_data.qr_box %>')" href="/admin_page/master_setting/delete?qr_box=<%= master_data.qr_box %>">Delete</a>
+                </td> -->
+                </tr>
+                <% }) %>
+                </tbody>
+
+                </table>
+                </div>
+
+                <% if (allReceived) { %>
+                    <div>
+                        <h2 style="color: rgb(96, 228, 151);">PASS</h2>
+                    </div>
+                <% } else { %>
+                    <div>
+                        <h2 style="color: rgb(221, 95, 95);">NG</h2>
+                    </div>   
+                <% } %>
+                <!-- </tbody>
+            </table> -->
+    </div>
+
+
+    <script>
+
+    </script>
+    
+</body>
+</html>

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+</head>
+<body>
+
+    <div>
+        <h1>Edit Master Packing List Parameters</h1>
+    </div>
+    <form action="/admin_page/master_setting/editing" method="POST" class="form-control">
+        <label class="mb-3" for="qr_packingList">QR Packing List</label>
+        <input class="form-control mb-3" type="text" value="<%= master_datas[0].qr_packingList %>" id="qr_packingList" name="qr_packingList">
+        <label class="mb-3" for="partNumber">Part Number</label>
+        <input class="form-control mb-3" type="text" value="<%= master_datas[0].partNumber %>" id="partNumber" name="partNumber">
+        <label class="mb-3" for="partName">Part Name</label>
+        <input class="form-control mb-3" type="text" value="<%= master_datas[0].partName %>" id="partName" name="partName">
+        <label class="mb-3" for="qr_box">Box NO.</label>
+        <input disabled class="form-control mb-3" type="text" value="<%= master_datas[0].qr_box %>" id="qr_box" name="qr_box">
+        <input hidden class="form-control mb-3" type="text" value="<%= master_datas[0].qr_box %>" id="qr_box" name="qr_box">
+        <label class="mb-3" for="qty">QTY.</label>
+        <input class="form-control mb-3" type="text" value="<%= master_datas[0].qty %>" id="qty" name="qty">
+        <label class="mb-3" for="is_fac1_receive">DNTH Receive</label>
+        <input class="form-control mb-3" type="text" value="<%= master_datas.map(data => data.is_fac1_receive.toString('hex')); %>" id="is_fac1_receive" name="is_fac1_receive">
+        <button type="submit" class="btn btn-warning">Edit Master Data</button>
+    </form>
+    
+</body>
+</html>
