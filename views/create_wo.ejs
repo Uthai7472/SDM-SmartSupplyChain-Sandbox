@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+</head>
+<body>
+
+    <div class="header">
+        <a href="/admin_page">Home</a>
+        <a href="/admin_page/master_main">Master Main</a>
+        <a href="/admin_page/master_setting">Master Setting</a>
+        <a href="/admin_page/receive_scan_master">Receive Scan</a>
+        <a href="/dnth_data">DNTH Data</a>
+        <a href="/logout">Logout</a>
+    </div>
+
+    <form action="/create_wo/registing" method="POST" class="form-control">
+        <label class="mb-3" for="qr_prod">QR Work Order</label>
+        <div>
+            <!-- <button type="button" id="btn_gen_dnth" class="btn btn-secondary mb-2">DNTH</button>
+            <button type="button" id="btn_gen_ttt" class="btn btn-secondary mb-2">TTT</button>
+            <button type="button" id="btn_gen_nt" class="btn btn-secondary mb-2">NT</button>
+            <button type="button" id="btn_reset_localstorage" class="btn btn-danger mb-2">Reset localStorage</button> -->
+            <button type="button" id="btn_open_popup" class="btn btn-secondary mb-3">Get QR Production</button>
+        </div>
+        <input class="qr_prod form-control" id="qr_prod" name="qr_prod" type="text">
+        <p></p>
+        <label class="mb-3" for="qr_prod">QR Box</label>
+        <input class="qr_kanban_in form-control" id="qr_kanban_in" name="qr_kanban_in" type="text">
+        <p></p>
+        <button type="submit" class="btn btn-primary mb-3">Register</button>
+    </form>
+
+    <hr>
+    <div>
+        <div>
+            <h1>--------------PRODUCTION DATA----------------------</h1>
+        </div>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>QR PRODUCTION</th>
+                    <th>DATE IN PROD</th>
+                    <th>TIME IN PROD</th>
+                    <th>DATE OUT PROD</th>
+                    <th>TIME OUT PROD</th>
+                    <th>TOTAL OK</th>
+                    <th>TOTAL NG</th>
+                    <th>OPERATOR</th>
+                    <th>QR PRODUCTION</th>
+                    <th>ACTIONS</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% get_datas.forEach((data) => { %>
+                <tr>
+                    <td><%= data.qr_prod %></td>
+                    <td><%= data.date %></td>
+                    <td><%= data.qr_prod %></td>
+                    <td><%= data.qr_prod %></td>
+                    <td><%= data.qr_prod %></td>
+                    <td><%= data.qr_prod %></td>
+                    <td><%= data.qr_prod %></td>
+                    <td><%= data.qr_prod %></td>
+                    <td><%= data.qr_prod %></td>
+                    <td>
+                        <a href="" class="btn btn-warning">PROD. FINISHED</a>
+                        <a href="" class="btn btn-secondary">DELETE</a>
+                    </td>
+                </tr>
+                <% }) %>
+            </tbody>
+        </table>
+    </div>
+
+
+    <script>
+        // document.getElementById('qr_kanban_in').addEventListener('keypress', function(e) {
+        //     if (e.key === 'Enter') {
+        //         e.preventDefault(); // Prevent the default form submission
+        //         const inputValue = e.target.value; // Get the input value
+        //         const newInput = document.createElement('input'); // Create a new input element
+        //         newInput.setAttribute('type', 'text'); // Set the type of the new input
+        //         newInput.setAttribute('value', inputValue); // Set the value of the new input
+        //         newInput.setAttribute('readonly', 'false'); // Set the new input as readonly
+        //         document.querySelector('form').appendChild(newInput); // Append the new input to the form
+        //         document.querySelector('form').appendChild(document.createElement('br')); // Add a line break for spacing
+        //         e.target.value = ''; // Clear the original input value
+        //     }
+        // });
+
+        document.getElementById('btn_open_popup').addEventListener('click', function() {
+            // Define the URL and window features
+            var url = 'http://localhost:5672/create_work_order/popup_content'; // Replace with the actual URL
+            var windowName = 'PopupWindow';
+            var windowFeatures = 'width=600,height=400,scrollbars=yes';
+
+            // Open the popup window
+            var popupWindow = window.open(url, windowName, windowFeatures);
+            if (popupWindow) {
+                popupWindow.focus(); // Bring the popup window to the front if it's already open
+            } else {
+                alert('The popup window was blocked by the browser. Please allow popups for this site.');
+            }
+        });
+
+
+
+        
+    </script>
+    
+</body>
+</html>

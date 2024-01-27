@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <style>
+        /* h1 {
+            color: rgb(143, 229, 158);
+        } */
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="/admin_page">Home</a>
+        <a href="/admin_page/master_main">Master Main</a>
+        <a href="/admin_page/master_setting">Master Setting</a>
+        <a href="/admin_page/receive_scan_master">Receive Scan</a>
+        <a href="/dnth_data">DNTH Data</a>
+        <a href="/create_work_order">Register QR Production</a>
+        <a href="/logout">Logout</a>
+    </div>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>NO.</th>
+                <th>DNTH RECEIVE QR PACKING LIST</th>
+                <th>QR KANBAN IN</th>
+                <th>KANBAN DATE IN</th>
+                <th>KANBAN TIME IN</th>
+                <th>QTY</th>
+                <th>PART NUMBER</th>
+                <th>DNTH QR PRODUCTION</th>
+                <!-- <th>COUNT BOX</th> -->
+                <!-- <th>DNTH Receive</th> -->
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% let count = 0; %>
+            <% dnth_datas.forEach((dnth_data) => { %>
+            <tr>
+                <% count++; %>
+                <td><%= count %></td>
+                <td><%= dnth_data.qr_pack_in %></td>
+                <td><%= dnth_data.qr_kanban_in %></td>
+                <td><%= dnth_data.kanban_date_in.toLocaleDateString('en-GB') %></td>
+                <td><%= dnth_data.kanban_time_in %></td>
+                <td><%= dnth_data.qty_kanban_in %></td>
+                <td><%= dnth_data.partNumber %></td>
+                <td><%= dnth_data.qr_prod %></td>
+                <td>
+                    <a class="btn btn-primary" href="#">Edit</a>
+                    <a class="btn btn-secondary" href="#">Delete</a>
+                </td>
+            </tr>
+            <% }) %>
+        </tbody>
+    </table>
+
+
+    <script>
+        // Set the initial value of the "no" div to 1
+        // document.getElementById('no').innerText = 1;
+
+        function confirmDelete(qrBox) {
+            if (confirm('Are you sure you want to delete this item?')) {
+                // window.location.href = '/admin_page/master_setting/delete?qr_box=' + qrBox; // Proceed with deletion
+            }
+        }
+    </script>
+    
+</body>
+</html>

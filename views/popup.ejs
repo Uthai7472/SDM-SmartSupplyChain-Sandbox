@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+</head>
+<body>
+    <div>
+        <h1>Internal Process for Create QR Production</h1>
+    </div>
+    
+    <div>
+        <button type="button" id="btn_gen_dnth" class="btn btn-secondary mb-2">DNTH</button>
+        <button type="button" id="btn_gen_ttt" class="btn btn-secondary mb-2">TTT</button>
+        <button type="button" id="btn_gen_nt" class="btn btn-secondary mb-2">NT</button>
+        <button type="button" id="btn_reset_localstorage" class="btn btn-danger mb-2">Reset localStorage</button>
+    </div>
+    <input class="qr_prod form-control" id="qr_prod" name="qr_prod" type="text" readonly>
+
+
+    <script>
+        document.getElementById('btn_gen_dnth').addEventListener('click', () => {
+            const qrProdInput = document.getElementById('qr_prod');
+            let currentNumber_dnth = localStorage.getItem('currentNumber_dnth');
+            if (!currentNumber_dnth) {
+                currentNumber_dnth = 1;
+            }
+            const paddedNextNumber = String(currentNumber_dnth).padStart(4, '0');
+            const newQrProd = 'DNTHPD' + paddedNextNumber;
+            qrProdInput.value = newQrProd;
+            localStorage.setItem('currentNumber_dnth', parseInt(currentNumber_dnth) + 1);
+            // Reset the local storage keys for TTT and NT
+            // localStorage.removeItem('currentNumber_ttt');
+            // localStorage.removeItem('currentNumber_nt');
+        });
+
+
+        document.getElementById('btn_gen_ttt').addEventListener('click', function() {
+            const qrProdInput = document.getElementById('qr_prod');
+            let currentNumber_ttt = localStorage.getItem('currentNumber_ttt'); // Get the current number from local storage
+            if (!currentNumber_ttt) {
+                currentNumber_ttt = 1; // Set the initial number if it doesn't exist in local storage
+            }
+            const paddedNextNumber = String(currentNumber_ttt).padStart(4, '0'); // Pad the current number with leading zeros
+            const newQrProd = 'TTTPD' + paddedNextNumber; // Concatenate the string and the padded current number
+            qrProdInput.value = newQrProd; // Update the input value with the new QR Prod
+            localStorage.setItem('currentNumber_ttt', parseInt(currentNumber_ttt) + 1); // Increment and store the next number in local storage
+            // Reset the local storage keys for TTT and NT
+            // localStorage.removeItem('currentNumber_dnth');
+            // localStorage.removeItem('currentNumber_nt');
+        });
+
+        document.getElementById('btn_gen_nt').addEventListener('click', function() {
+            const qrProdInput = document.getElementById('qr_prod');
+            let currentNumber_nt = localStorage.getItem('currentNumber_nt'); // Get the current number from local storage
+            if (!currentNumber_nt) {
+                currentNumber_nt = 1; // Set the initial number if it doesn't exist in local storage
+            }
+            const paddedNextNumber = String(currentNumber_nt).padStart(4, '0'); // Pad the current number with leading zeros
+            const newQrProd = 'NTPD' + paddedNextNumber; // Concatenate the string and the padded current number
+            qrProdInput.value = newQrProd; // Update the input value with the new QR Prod
+            localStorage.setItem('currentNumber_nt', parseInt(currentNumber_nt) + 1); // Increment and store the next number in local storage
+            // Reset the local storage keys for TTT and NT
+            // localStorage.removeItem('currentNumber_ttt');
+            // localStorage.removeItem('currentNumber_dnth');
+        });
+
+        document.getElementById('btn_reset_localstorage').addEventListener('click', function() {
+            localStorage.clear(); // Reset localStorage
+            alert('localStorage has been reset.'); // Display a message to indicate that localStorage has been reset
+            location.reload();
+        });
+    </script>
+
+</body>
+</html>

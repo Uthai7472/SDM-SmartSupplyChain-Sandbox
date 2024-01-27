@@ -76,12 +76,12 @@ app.get('/', async (req, res) => {
         await connection.query(`
         CREATE TABLE IF NOT EXISTS tb_dnth (
             qr_pack_in VARCHAR(255),
-            qr_kanban_in VARCHAR(255),
+            qr_kanban_in VARCHAR(255) PRIMARY KEY,
             kanban_date_in DATE,
             kanban_time_in TIME,
             qty_kanban_in INT,
             partNumber VARCHAR(255),
-            qr_prod VARCHAR(255) PRIMARY KEY,
+            qr_prod VARCHAR(255),
             date_in_prod DATE,
             time_in_prod TIME,
             date_out_prod DATE,
@@ -96,7 +96,7 @@ app.get('/', async (req, res) => {
             qr_pack_out VARCHAR(255)
           )
         `)
-        connection.release();
+        // connection.release();
         // await connection.query('ALTER TABLE tb_master_packing ADD COLUMN fac1_receive BOOLEAN DEFAULT FALSE');
         // connection.release();
         // await connection.query(`
@@ -104,7 +104,9 @@ app.get('/', async (req, res) => {
         //     VALUES ('A54321', 'SM299159-0080', 'CYLINDER SUPPLY PUMP(HP5S)', 'A4321', 1000, 1);
         // `);
         // connection.release();
-        // await connection.query(`DROP TABLE tb_master_packing`);
+        // await connection.query(`DROP TABLE tb_dnth`);
+        // connection.release();
+        // await connection.query(`DELETE FROM tb_dnth`);
         // connection.release();
         // await connection.query(`
         //     INSERT INTO tb_master_packing (qr_packingList) VALUES ('A54321')
@@ -254,8 +256,13 @@ app.get('/admin_page/master_setting/edit', isAuthenticated, async (req, res) => 
 app.post('/admin_page/master_setting/editing', async (req, res) => {
     try {
         const {qr_packingList, partNumber, partName, qr_box, qty, is_fac1_receive} = req.body;
+        const connection = await pool.getConnection();
         let is_fac1_receive_bit = 0;
         if (is_fac1_receive === '00') {
+            // If you change DNTH receive to 0 , go to delete DNTH_data where qr_kanban_in = qr_box
+            await connection.execute(`
+                DELETE FROM tb_dnth WHERE qr_kanban_in = ?
+            `, [qr_box])
             is_fac1_receive_bit = 0;
         }
         else if (is_fac1_receive === '01') {
@@ -263,12 +270,13 @@ app.post('/admin_page/master_setting/editing', async (req, res) => {
         }
         console.log(qr_packingList, partNumber, partName, qr_box, qty, is_fac1_receive, is_fac1_receive_bit);
 
-        const connection = await pool.getConnection();
         await connection.execute(`
             UPDATE tb_master_packing SET qr_packingList = ?, partNumber = ?,
             partName = ?, qty = ?, is_fac1_receive = ? WHERE qr_box = ?
         `, [qr_packingList, partNumber, partName, qty, is_fac1_receive_bit, qr_box]);
         connection.release();
+
+        
 
         res.redirect('/admin_page/master_setting');
     }
@@ -307,11 +315,19 @@ app.get('/admin_page/receive_scan_master', isAuthenticated, (req, res) => {
     }
 });
 // Fac1 receive scan endpoint
-app.post('/admin_page/receive_scan_master/master_receiving', (req, res) => {
+app.post('/admin_page/receive_scan_master/master_receiving', async (req, res) => {
     try {
         const {qr_packingList} = req.body;
+        const connection = await pool.getConnection();
+        const [check_datas] = await connection.execute(`
+            SELECT * FROM tb_master_packing WHERE qr_packingList = '${qr_packingList}'
+        `)
 
-        res.redirect(`/admin_page/receive_scan_box?qr_packingList=${qr_packingList}`)
+        if (check_datas.length > 0) {
+            res.redirect(`/admin_page/receive_scan_box?qr_packingList=${qr_packingList}`)
+        } else {
+            res.redirect('/admin_page/receive_scan_master');
+        }
     }
     catch (error) {
         console.error('Error : ', error);
@@ -352,15 +368,83 @@ app.post('/admin_page/receive_scan_master/receive_box_complete', async (req, res
     try {
         const {qr_packingList, qr_box, kanban_date_in, kanban_time_in} = req.body;
         // const qr_packingList_link = req.query.qr_packingList;
-        console.log(qr_packingList, qr_box);
+        console.log(qr_packingList, qr_box, kanban_date_in, kanban_time_in);
 
         const connection = await pool.getConnection();
+
         await connection.execute(`
             UPDATE tb_master_packing SET is_fac1_receive = 1 WHERE qr_box = ? AND qr_packingList = ?
         `, [qr_box, qr_packingList]);
         connection.release();
 
+        // Check if the entry already exists in tb_dnth
+        const [existingEntry] = await connection.execute(`
+            SELECT qr_kanban_in FROM tb_dnth WHERE qr_kanban_in = ?
+        `, [qr_box]);
+        connection.release();
+        console.log(existingEntry.length);
+
+        if (existingEntry.length === 0) {
+            // Get data additionally from tb_master_packing
+            const [get_datas] = await connection.execute(`
+                SELECT partNumber, qty FROM tb_master_packing WHERE qr_box = ?
+            `, [qr_box]);
+            connection.release();
+            // Insert to DNTH data table when already scan
+            await connection.execute(`
+                INSERT INTO tb_dnth (qr_pack_in, qr_kanban_in, kanban_date_in, kanban_time_in, qty_kanban_in, partNumber)
+                VALUES (?, ?, ?, ?, ?, ?)
+            `, [qr_packingList, qr_box, kanban_date_in, kanban_time_in, get_datas[0].qty, get_datas[0].partNumber]);
+        } else {
+            res.redirect(`/admin_page/receive_scan_box?qr_packingList=${qr_packingList}`);
+        }
+
         res.redirect(`/admin_page/receive_scan_box?qr_packingList=${qr_packingList}`);
+    }
+    catch (error) {
+        console.error('Error : ', error);
+        res.status(500);
+    }
+});
+
+//------------------------------------DNTH SCAN RECEIVEING FUNCTION-------------------------------------------------
+// DNTH Internal data
+app.get('/dnth_data', isAuthenticated, async (req, res) => {
+    try {
+        const connection = await pool.getConnection();
+
+        const [get_qr_box] = await connection.execute(`
+            SELECT qr_box FROM tb_master_packing WHERE is_fac1_receive = 1
+        `);
+        // console.log('QR BOX : ', get_qr_box[0].qr_box);
+        if (get_qr_box.length > 0) {
+            const [receive_datas] = await connection.execute(`
+                SELECT partNumber, qty FROM tb_master_packing WHERE qr_box = ?
+                `, [get_qr_box[0].qr_box]);
+            connection.release();
+            console.log(receive_datas[0].partNumber, receive_datas[0].qty);
+
+            // Create DNTH Work order relative from part number
+            const lastDigitPartNumber = receive_datas[0].partNumber.slice(-4);
+            const dnthWorkOrderNumber = 'DNTHPD'.concat(lastDigitPartNumber);
+            console.log(dnthWorkOrderNumber);
+
+            const [dnth_datas] = await connection.execute(`
+                SELECT * FROM tb_dnth
+            `);
+            console.log("DNTH Datas : ", dnth_datas);
+
+            res.render('dnth_data', {dnth_datas: dnth_datas});
+            
+        } else {
+            const [dnth_datas] = await connection.execute(`
+                SELECT * FROM tb_dnth
+            `);
+            console.log("DNTH Datas : ", dnth_datas);
+
+            res.render('dnth_data', {dnth_datas: dnth_datas});
+        }
+        
     }
     catch (error) {
         console.error('Error : ', error);
@@ -369,6 +453,47 @@ app.post('/admin_page/receive_scan_master/receive_box_complete', async (req, res
 })
 
 
+//------------------------------------DNTH CREATE WORK ORDER FUNCTION-------------------------------------------------
+// DNTH Create Work order page 
+app.get('/create_work_order', isAuthenticated, async (req, res) => {
+    try {
+
+        const connection = await pool.getConnection();
+        const [get_datas] = await connection.execute(`
+            SELECT qr_kanban_in, qr_prod, date_in_prod, time_in_prod, date_out_prod, time_out_prod, 
+            total_ok_prod, total_ng_prod, operator FROM tb_dnth
+        `);
+        console.log(get_datas);
+
+        res.render('create_wo', {get_datas: get_datas});
+
+    } catch {
+        console.error('Error : ', error);
+        res.status(500);
+    }
+});
+app.get('/create_work_order/popup_content', (req, res) => {
+    res.render('popup');
+});
+// DNTH regiter QR Production endpoint
+app.post('/create_wo/registing', async (req, res) => {
+    try {
+        const connection = await pool.getConnection();
+        const {qr_prod, qr_kanban_in} = req.body;
+        console.log(qr_prod, qr_kanban_in);
+
+        await connection.execute(`
+            UPDATE tb_dnth SET qr_prod = ? WHERE qr_kanban_in = ?
+        `, [qr_prod, qr_kanban_in]);
+        connection.release();
+
+        res.redirect('/create_work_order');
+
+    } catch {
+        console.error('Error : ', error);
+        res.status(500);
+    }
+})
 
 
 
@@ -383,8 +508,12 @@ app.post('/admin_page/receive_scan_master/receive_box_complete', async (req, res
 
 
 
-
-
+function formatTime(date) {
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    const seconds = date.getSeconds().toString().padStart(2, '0');
+    return `${hours}:${minutes}:${seconds}`;
+  }
 
 
 // Admin page
