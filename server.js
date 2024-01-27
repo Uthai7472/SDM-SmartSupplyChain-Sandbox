@@ -73,6 +73,30 @@ app.get('/', async (req, res) => {
             qr_box VARCHAR(255), qty INT, boxCount INT)
         `);
         connection.release();
+        await connection.query(`
+        CREATE TABLE IF NOT EXISTS tb_dnth (
+            qr_pack_in VARCHAR(255),
+            qr_kanban_in VARCHAR(255),
+            kanban_date_in DATE,
+            kanban_time_in TIME,
+            qty_kanban_in INT,
+            partNumber VARCHAR(255),
+            qr_prod VARCHAR(255) PRIMARY KEY,
+            date_in_prod DATE,
+            time_in_prod TIME,
+            date_out_prod DATE,
+            time_out_prod TIME,
+            total_ok_prod INT,
+            total_ng_prod INT,
+            operator VARCHAR(255),
+            qr_kanban_out VARCHAR(255),
+            kanban_out_date DATE,
+            kanban_out_time TIME,
+            total_qty_out INT,
+            qr_pack_out VARCHAR(255)
+          )
+        `)
+        connection.release();
         // await connection.query('ALTER TABLE tb_master_packing ADD COLUMN fac1_receive BOOLEAN DEFAULT FALSE');
         // connection.release();
         // await connection.query(`
@@ -135,23 +159,8 @@ app.post('/login', async (req, res) => {
     }
 });
 
-// Admin page
-app.get('/admin_page', isAuthenticated, async (req, res) => {
-    try {
-        const connection = await pool.getConnection();
 
-        const [user_datas] = await connection.query('SELECT id, username, email, level FROM tb_user_e_supp');
-        connection.release();
-
-        res.render('admin_page', {user_datas: user_datas});
-    }
-    catch (error) {
-        console.error("Error : ", error);
-        res.status(500);
-        res.send("Error");
-    }
-});
-
+//------------------------------------MASTER (TSK) SHOW FUNCTION-------------------------------------------------
 // Master setting shoow main QR
 app.get('/admin_page/master_main', isAuthenticated, async (req, res) => {
     try{
@@ -168,7 +177,6 @@ app.get('/admin_page/master_main', isAuthenticated, async (req, res) => {
         res.status(500);
     }
 })
-
 // Master setting page
 app.get('/admin_page/master_setting', isAuthenticated, async (req, res) => {
     try {
@@ -190,6 +198,9 @@ app.get('/admin_page/master_setting', isAuthenticated, async (req, res) => {
         res.status(500);
     }
 });
+
+//------------------------------------MASTER (TSK) SETTING FUNCTION-------------------------------------------------
+// Master adding endpoint
 app.post('/admin_page/master_setting/adding', async (req, res) => {
     try {
         const connection = await pool.getConnection();
@@ -209,9 +220,9 @@ app.post('/admin_page/master_setting/adding', async (req, res) => {
 
         // Insert the new row into the table
         await connection.execute(`
-            INSERT INTO tb_master_packing (qr_packingList, partNumber, partName, qr_box, qty, boxCount, is_fac1_receive)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        `, [qr_packingList, part_number, part_name, box_no, qty, count_box, is_fac1_receive_bit]);
+            INSERT INTO tb_master_packing (qr_packingList, partNumber, partName, qr_box, qty, is_fac1_receive)
+            VALUES (?, ?, ?, ?, ?, ?)
+        `, [qr_packingList, part_number, part_name, box_no, qty, is_fac1_receive_bit]);
 
         connection.release();
 
@@ -221,69 +232,6 @@ app.post('/admin_page/master_setting/adding', async (req, res) => {
         res.redirect('/admin_page/master_setting');
     }
 });
-
-// Fac1 receive scan page
-app.get('/admin_page/receive_scan_master', isAuthenticated, (req, res) => {
-    try {
-        res.render('receive_scan_master');
-    }
-    catch (error) {
-        console.error('Error : ', error);
-        res.status(500);
-    }
-});
-// Fac1 receive scan endpoint
-app.post('/admin_page/receive_scan_master/master_receiving', (req, res) => {
-    try {
-        const {qr_packingList} = req.body;
-
-        res.redirect(`/admin_page/receive_scan_box?qr_packingList=${qr_packingList}`)
-    }
-    catch (error) {
-        console.error('Error : ', error);
-        res.status(500);
-    }
-})
-// Fac1 receive scan box page
-app.get('/admin_page/receive_scan_box', isAuthenticated, async (req, res) => {
-    try {
-        const qr_packingList = req.query.qr_packingList;
-
-        const connection = await pool.getConnection();
-        const [master_datas] = await connection.query(`
-            SELECT qr_packingList, partNumber, partName, qr_box, qty, boxCount, is_fac1_receive
-            FROM tb_master_packing WHERE qr_packingList = ?
-        `, [qr_packingList]);
-        connection.release();
-
-        res.render('receive_scan_sub', {master_datas: master_datas, qr_packingList: qr_packingList});
-    }
-    catch (error) {
-        console.error('Error : ', error);
-        res.status(500);
-    }
-});
-// Fac1 receive scan box endpoint
-app.post('/admin_page/receive_scan_master/receive_box_complete', async (req, res) => {
-    try {
-        const {qr_packingList, qr_box} = req.body;
-        // const qr_packingList_link = req.query.qr_packingList;
-        console.log(qr_packingList + " " + qr_box);
-
-        const connection = await pool.getConnection();
-        await connection.execute(`
-            UPDATE tb_master_packing SET is_fac1_receive = 1 WHERE qr_box = ? AND qr_packingList = ?
-        `, [qr_box, qr_packingList]);
-        connection.release();
-
-        res.redirect(`/admin_page/receive_scan_box?qr_packingList=${qr_packingList}`);
-    }
-    catch (error) {
-        console.error('Error : ', error);
-        res.status(500);
-    }
-})
-
 // Master setting edit page
 app.get('/admin_page/master_setting/edit', isAuthenticated, async (req, res) => {
     try {
@@ -343,6 +291,116 @@ app.get('/admin_page/master_setting/delete', async (req, res) => {
     catch (error) {
         console.error('Error : ', error);
         res.status(500);
+    }
+});
+
+
+//------------------------------------DNTH SCAN RECEIVEING FUNCTION-------------------------------------------------
+// Fac1 receive scan page
+app.get('/admin_page/receive_scan_master', isAuthenticated, (req, res) => {
+    try {
+        res.render('receive_scan_master');
+    }
+    catch (error) {
+        console.error('Error : ', error);
+        res.status(500);
+    }
+});
+// Fac1 receive scan endpoint
+app.post('/admin_page/receive_scan_master/master_receiving', (req, res) => {
+    try {
+        const {qr_packingList} = req.body;
+
+        res.redirect(`/admin_page/receive_scan_box?qr_packingList=${qr_packingList}`)
+    }
+    catch (error) {
+        console.error('Error : ', error);
+        res.status(500);
+    }
+})
+// Fac1 receive scan box page
+app.get('/admin_page/receive_scan_box', isAuthenticated, async (req, res) => {
+    try {
+        const qr_packingList = req.query.qr_packingList;
+
+        const connection = await pool.getConnection();
+        const [master_datas] = await connection.query(`
+            SELECT qr_packingList, partNumber, partName, qr_box, qty, boxCount, is_fac1_receive
+            FROM tb_master_packing WHERE qr_packingList = ?
+        `, [qr_packingList]);
+        connection.release();
+        const [master_sum_by_partNumber] = await connection.query(`
+            SELECT qr_packingList, partNumber, 
+            SUM(CASE WHEN is_fac1_receive != 0 THEN qty ELSE 0 END) AS totalActQty, 
+            SUM(qty) AS totalQty, 
+            COUNT(CASE WHEN is_fac1_receive != 0 THEN 1 END) AS totalActBox, 
+            COUNT(qty) AS totalBox
+            FROM tb_master_packing 
+            GROUP BY partNumber
+        `);
+        connection.release();
+
+        res.render('receive_scan_sub', {master_datas: master_datas, qr_packingList: qr_packingList, master_sum_by_partNumber: master_sum_by_partNumber});
+    }
+    catch (error) {
+        console.error('Error : ', error);
+        res.status(500);
+    }
+});
+// Fac1 receive scan box endpoint
+app.post('/admin_page/receive_scan_master/receive_box_complete', async (req, res) => {
+    try {
+        const {qr_packingList, qr_box, kanban_date_in, kanban_time_in} = req.body;
+        // const qr_packingList_link = req.query.qr_packingList;
+        console.log(qr_packingList, qr_box);
+
+        const connection = await pool.getConnection();
+        await connection.execute(`
+            UPDATE tb_master_packing SET is_fac1_receive = 1 WHERE qr_box = ? AND qr_packingList = ?
+        `, [qr_box, qr_packingList]);
+        connection.release();
+
+        res.redirect(`/admin_page/receive_scan_box?qr_packingList=${qr_packingList}`);
+    }
+    catch (error) {
+        console.error('Error : ', error);
+        res.status(500);
+    }
+})
+
+
+
+
+
+
+//_____________________________________________________________________________________________________________________________________
+//_____________________________________________________________________________________________________________________________________
+//_____________________________________________________________________________________________________________________________________
+//_____________________________________________________________________________________________________________________________________
+//_____________________________________________________________________________________________________________________________________
+//_____________________________________________________________________________________________________________________________________
+
+
+
+
+
+
+
+
+// Admin page
+app.get('/admin_page', isAuthenticated, async (req, res) => {
+    try {
+        const connection = await pool.getConnection();
+
+        const [user_datas] = await connection.query('SELECT id, username, email, level FROM tb_user_e_supp');
+        connection.release();
+
+        res.render('admin_page', {user_datas: user_datas});
+    }
+    catch (error) {
+        console.error("Error : ", error);
+        res.status(500);
+        res.send("Error");
     }
 });
 

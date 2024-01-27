@@ -21,19 +21,54 @@
     </div>
 
     <div>
-        <h1>Add Master Packing List</h1>
+        <h1>DNTH Check Kanban List Page</h1>
     </div>
     <div>
-        <form action="/admin_page/receive_scan_master/receive_box_complete" method="POST">
-            <label for="qr_packingList" class="form-control" name="qr_packingList">QR Packing List : <%= qr_packingList %></label>
-            <input hidden value="<%= qr_packingList %>" type="text" id="qr_packingList" class="qr_packingList form-control mb-3" name="qr_packingList">
-            <label for="qr_box" class="form-control" name="qr_box">QR Box</label>
+        <form action="/admin_page/receive_scan_master/receive_box_complete" method="POST" class="form-control mb-3">
+            <label for="qr_packingList" class="" name="qr_packingList">QR Packing List</label>
+            <input value="<%= qr_packingList %>" type="text" id="qr_packingList" class="qr_packingList form-control mb-3" name="qr_packingList" readonly>
+            <p></p>
+            <label for="qr_box" class="" name="qr_box">QR Box</label>
             <input type="text" id="qr_box" class="qr_box form-control mb-3" name="qr_box">
+            <label for="kanban_date_in" class="kanban_date_in" name="kanban_date_in">KANBAN Date In</label>
+            <input type="text" id="kanban_date_in" class="kanban_date_in form-control mb-3" name="kanban_date_in" readonly>
+            <label for="kanban_time_in" class="kanban_time_in" name="kanban_time_in">KANBAN Time In</label>
+            <input type="text" id="kanban_time_in" class="kanban_time_in form-control mb-3" name="kanban_time_in" readonly>
             <button type="submit" class="btn btn-primary">Submit</button>
         </form>
     </div>
 
     <div>
+        <h1>TSK Packing List</h1>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>NO.</th>
+                    <th>QR PACKING LIST</th>
+                    <th>PART NUMBER</th>
+                    <th>TOTAL QTY.</th>
+                    <th>TOTAL BOX</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% let count_1 = 0; %>
+                <% master_sum_by_partNumber.forEach((row) => { %>
+                <tr>
+                    <% count_1++; %>
+                    <td><%= count_1 %></td>
+                    <td><%= row.qr_packingList %></td>
+                    <td><%= row.partNumber %></td>
+                    <td><%= row.totalActQty %>/<%= row.totalQty %></td>
+                    <td><%= row.totalActBox %>/<%= row.totalBox %></td>
+                </tr>
+                <% }) %>
+            </tbody>
+        </table>
+    </div>
+    <hr>
+
+    <div>
+            <div><h1>TSK Kanban List</h1></div>
             <table class="table">
                 <thead>
                     <tr>
@@ -43,7 +78,7 @@
                         <th>PART NAME</th>
                         <th>BOX NO.</th>
                         <th>QTY</th>
-                        <th>COUNT BOX</th>
+                        <!-- <th>COUNT BOX</th> -->
                         <th>DNTH Receive</th>
                         <!-- <th>Actions</th> -->
                     </tr>
@@ -64,7 +99,7 @@
                 <td style="<% if (is_fac1_receive === '01') { %> background-color: rgb(143, 229, 158);; <% } %>"><%= master_data.partName %></td>
                 <td style="<% if (is_fac1_receive === '01') { %> background-color: rgb(143, 229, 158);; <% } %>"><%= master_data.qr_box %></td>
                 <td style="<% if (is_fac1_receive === '01') { %> background-color: rgb(143, 229, 158);; <% } %>"><%= master_data.qty %></td>
-                <td style="<% if (is_fac1_receive === '01') { %> background-color: rgb(143, 229, 158);; <% } %>"><%= master_data.boxCount %></td>
+                <!-- <td style="<% if (is_fac1_receive === '01') { %> background-color: rgb(143, 229, 158);; <% } %>"><%= master_data.boxCount %></td> -->
                 <td style="<% if (is_fac1_receive === '01') { %> background-color: rgb(143, 229, 158);; <% } %>"><%= is_fac1_receive %></td>
                 <!-- <td>
                     <a class="btn btn-primary" href="#">Edit</a>
@@ -92,7 +127,27 @@
 
 
     <script>
+        document.getElementById('qr_box').addEventListener('input', function() {
+        const qrBoxValue = this.value;
+        const kanbanDateInInput = document.getElementById('kanban_date_in');
+        const kanbanTimeInInput = document.getElementById('kanban_time_in');
 
+        if (qrBoxValue.length >= 3) {
+            const currentDate = new Date();
+            const currentYear = currentDate.getFullYear();
+            const currentMonth = String(currentDate.getMonth() + 1).padStart(2, '0');
+            const currentDay = String(currentDate.getDate()).padStart(2, '0');
+            const currentHours = String(currentDate.getHours()).padStart(2, '0');
+            const currentMinutes = String(currentDate.getMinutes()).padStart(2, '0');
+            const currentSeconds = String(currentDate.getSeconds()).padStart(2, '0');
+
+            kanbanDateInInput.value = `${currentYear}-${currentMonth}-${currentDay}`;
+            kanbanTimeInInput.value = `${currentHours}:${currentMinutes}:${currentSeconds}`;
+        } else {
+            kanbanDateInInput.value = '';
+            kanbanTimeInInput.value = '';
+        }
+        });
     </script>
     
 </body>
