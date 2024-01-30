@@ -15,6 +15,10 @@ app.use(express.urlencoded({ extended: true }));
 // Parse JSON bodies
 app.use(bodyParser.json());
 
+let dnthCounter = 0;
+let tttCounter = 0;
+let ntsCounter = 0;
+
 const server = app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
 })
@@ -458,49 +462,26 @@ app.get('/dnth_data', isAuthenticated, async (req, res) => {
         res.status(500);
     }
 })
+app.get('/dnth_data/reset_qr_prod', async (req, res) => {
+    let connection;
+    try {
+        connection = await pool.getConnection();
+
+        await connection.query(`
+            UPDATE tb_dnth SET qr_prod = NULL;
+        `);
+        connection.release();
+
+        console.log('Reset DNTH QR PROD successfully');
+        res.redirect('/dnth_data');
+
+    } catch (error) {
+        console.error('Error : ', error);
+        res.status(500);
+    }
+})
 
 
-//------------------------------------DNTH CREATE WORK ORDER FUNCTION-------------------------------------------------
-// DNTH Create Work order page 
-// app.get('/create_work_order', isAuthenticated, async (req, res) => {
-//     try {
-
-//         const connection = await pool.getConnection();
-//         const [get_datas] = await connection.execute(`
-//             SELECT qr_kanban_in, qr_prod, date_in_prod, time_in_prod, date_out_prod, time_out_prod, 
-//             total_ok_prod, total_ng_prod, operator FROM tb_dnth
-//         `);
-//         console.log(get_datas);
-
-//         res.render('create_wo', {get_datas: get_datas});
-
-//     } catch {
-//         console.error('Error : ', error);
-//         res.status(500);
-//     }
-// });
-// app.get('/create_work_order/popup_content', (req, res) => {
-//     res.render('popup');
-// });
-// // DNTH regiter QR Production endpoint
-// app.post('/create_wo/registing', async (req, res) => {
-//     try {
-//         const connection = await pool.getConnection();
-//         const {qr_prod, qr_kanban_in} = req.body;
-//         console.log(qr_prod, qr_kanban_in);
-
-//         await connection.execute(`
-//             UPDATE tb_dnth SET qr_prod = ? WHERE qr_kanban_in = ?
-//         `, [qr_prod, qr_kanban_in]);
-//         connection.release();
-
-//         res.redirect('/create_work_order');
-
-//     } catch {
-//         console.error('Error : ', error);
-//         res.status(500);
-//     }
-// })
 
 // PC page
 app.get('/pc_page', isAuthenticated, async (req, res) => {
@@ -535,6 +516,11 @@ app.get('/pc_page', isAuthenticated, async (req, res) => {
         }
 
         console.log('Total qty each part number updated successfully');
+
+        // RESET qty_mode COUNTER
+        // dnthCounter = 0;
+        // tttCounter = 0;
+        // ntsCounter = 0;
 
         res.render('pc_page', {dnth_group_datas: get_dnth_group_datas, dnth_datas: get_dnth_datas});
 
@@ -581,20 +567,60 @@ app.post('/pc_page/update_qr_prod_by_pn', async (req, res) => {
     }
 })
 // PC shop by qty
+// Initialize the counters from localStorage or default to 
+
 app.post('/pc_page/update_qr_prod_by_qty', async (req, res) => {
     let connection;
     try {
         connection = await pool.getConnection();
-        // Retrieve the checked data from the request body
-        const checkedIndexes = req.body.checkedRows;
 
-        // Process the checked data and update the MySQL database
-        checkedIndexes.forEach((index) => {
-            // Retrieve the corresponding data based on the index
-            const rowData = dnth_datas[index]; // Replace dnth_datas with the actual data source
+        const qr_pack_ins = req.body.qr_pack_in;
+        const qr_kanban_ins = req.body.qr_kanban_in;
+        const partNumbers = req.body.partNumber;
+        const qr_prods = req.body.qr_prod;
+        const selecteds = req.body.select;
+        const dnth_submit = req.body.dnth_submit;
 
-            console.log(rowData);
-        })
+        console.log("DNTH SUBMIT BTN : ", dnth_submit);
+        // Receive submit button for generate QR PD
+        let uniqueCode = '';
+
+        if (req.body.dnth_submit) {
+            dnthCounter++;
+            uniqueCode = 'DNTHPD' + dnthCounter.toString().padStart(4, '0');
+            console.log("DNTH CODE: ", uniqueCode);
+            // localStorage.setItem('dnthCounter', dnthCounter);
+        } else if (req.body.ttt_submit) {
+            tttCounter++;
+            uniqueCode = 'TTTPD' + tttCounter.toString().padStart(4, '0');
+            // localStorage.setItem('tttCounter', tttCounter);
+        } else if (req.body.nts_submit) {
+            ntsCounter++;
+            uniqueCode = 'NTSPD' + ntsCounter.toString().padStart(4, '0');
+            // localStorage.setItem('ntsCounter', ntsCounter);
+        }
+
+        console.log('Generate PD QR : ', uniqueCode);
+
+        for (let i = 0; i < selecteds.length; i++) {
+            const rowIndex = selecteds[i];
+            const qr_pack_in = qr_pack_ins[rowIndex];
+            const qr_kanban_in = qr_kanban_ins[rowIndex];
+            const partNumber = partNumbers[rowIndex];
+            const qr_prod = qr_prods[rowIndex];
+
+            console.log('qr_kanban_in_SELECTED : ', qr_kanban_in);
+
+            // UPDATE qr_prod to database 
+            sql = `
+                UPDATE tb_dnth SET qr_prod = ?
+                WHERE qr_pack_in = ? AND qr_kanban_in = ?;
+            `;
+            await connection.query(sql, [uniqueCode, qr_pack_in, qr_kanban_in]);
+            connection.release();
+        }
+
+        console.log("Update QR_PROD by QTY successfully");
 
         res.redirect('/dnth_data');
 
@@ -612,30 +638,29 @@ app.post('/pc_page/update_qr_prod_by_qty', async (req, res) => {
 
 
 
-
-
 // ______________________________________________TEST_____________________________________________
 app.get('/test', (req, res) => {
     res.render('test');
 });
 app.post('/submit', (req, res) => {
-    const checkboxes = req.body.checkboxes; // an array of the checked checkbox values
-    const texts = req.body.texts; // an array of the corresponding text values
-  
-    // Process the data as needed
-    // For example, you can filter out the checked checkboxes and their corresponding texts
-    const checkedData = checkboxes.reduce((acc, checkbox, index) => {
-      if (checkbox) {
-        acc.push(texts[index]);
-      }
-      return acc;
-    }, []);
+    const selectedRows = req.body.select;
+    const column1Values = req.body.column1;
+    const column2Values = req.body.column2;
+    // Retrieve values for other columns as needed
 
-    console.log(checkedData);
-  
-    // Render a response using an EJS template
-    // res.render('result', { checkedData });
-  });
+    // Process the selected rows and their values
+    for (let i = 0; i < selectedRows.length; i++) {
+        const rowIndex = selectedRows[i];
+        const column1Value = column1Values[rowIndex];
+        const column2Value = column2Values[rowIndex];
+        // Process values for other columns as needed
+        
+        // Do something with the selected row and its values
+        console.log(`Row ${rowIndex}: Column 1 - ${column1Value}, Column 2 - ${column2Value}`);
+    }
+
+    // Redirect or send response as needed
+});
 
 
 

@@ -86,81 +86,48 @@
             <table class="table">
               <!-- Table headers -->
               <thead>
-                <!-- Your table headers -->
-                <th>QR PACKING LIST IN</th>
-                <th>QR KANBAN IN</th>
-                <th>QTY</th>
-                <th>PART NUMBER</th>
-                <th>QR PRODUCTION</th>
-                <th>SHOP</th>
-              </thead>
-              <tbody>
-                <!-- Loop through the data and display each row -->
-                <% dnth_datas.forEach((data, index) => { %>
-                  <tr>
-                    <!-- Display the data and include a checkbox for each row -->
-                    <td><%= data.qr_pack_in %></td>
-                    <td><%= data.qr_kanban_in %></td>
-                    <td><%= data.qty_kanban_in %></td>
-                    <td><%= data.partNumber %></td>
-                    <td><%= data.qr_prod %></td>
-                    <!-- Include other data fields as needed -->
-                    <td><input type="checkbox" name="checkedRows" value="<%= index %>"></td>
-                  </tr>
-                <% }) %>
-              </tbody>
-            </table>
-        
-            <!-- Add a submit button to send the checked data to the server -->
-            <button class="btn btn-primary" type="submit">Update Checked Data</button>
-          </form>
-    </div>
-
-    <div id="qty_mode" class="mode">
-        <form id="qty_form" action="/pc_page/update_qr_prod_by_qty" method="post">
-        <table class="table" id="qty_main_table">
-            <thead>
+                <tr>
+                    <!-- Your table headers -->
                     <th>QR PACKING LIST IN</th>
                     <th>QR KANBAN IN</th>
                     <th>QTY</th>
                     <th>PART NUMBER</th>
                     <th>QR PRODUCTION</th>
                     <th>SHOP</th>
-            </thead>
-            <% dnth_datas.forEach((data, index) => { %> 
-            <tbody>
-                
-                        <td>
-                            <input value="<%= data.qr_pack_in %>" type="text" readonly id="qr_pack_in_<%= index %>" name="qr_pack_in[<%= index %>]">
-                        </td>
-                        <td>
-                            <input value="<%= data.qr_kanban_in %>" type="text" readonly id="qr_kanban_in_<%= index %>" name="qr_kanban_in[<%= index %>]">
-                        </td>
-                        <td>
-                            <input value="<%= data.qty_kanban_in %>" type="text" readonly id="qty_kanban_in_<%= index %>" name="qty_kanban_in[<%= index %>]">
-                        </td>
-                        <td>
-                            <input value="<%= data.partNumber %>" type="text" readonly id="partNumber_<%= index %>" name="partNumber[<%= index %>]">
-                        </td>
-                        <td>
-                            <input value="<%= data.qr_prod %>" type="text" readonly id="qr_prod_<%= index %>" name="qr_prod[<%= index %>]">
-                        </td>
-                        <td>
-                            <input type="checkbox" name="shop_this" id="shop_this_<%= index %>">
-                        </td>
-            </tbody>
-            <% }) %>
-        </table>
+                </tr>
+                </thead>
+              <tbody>
+                <!-- Loop through the data and display each row -->
+                <% dnth_datas.forEach((data, i) => { %>
+                  <tr onclick="checkRow(this)">
+                    <!-- Display the data and include a checkbox for each row -->
+                    <td>
+                        <input type="text" name="qr_pack_in[]" id="qr_pack_in" value="<%= data.qr_pack_in %>" readonly>
+                    </td>
+                    <td>
+                        <input type="text" name="qr_kanban_in[]" id="qr_kanban_in" value="<%= data.qr_kanban_in %>" readonly>
+                    </td>
+                    <td>
+                        <input type="text" name="qty_kanban_in[]" id="qty_kanban_in" value="<%= data.qty_kanban_in %>" readonly>
+                    </td>
+                    <td>
+                        <input type="text" name="partNumber[]" id="partNumber" value="<%= data.partNumber %>" readonly>
+                    </td>
+                    <td>
+                        <input type="text" name="qr_prod[]" id="qr_prod" value="<%= data.qr_prod %>" readonly>
+                    </td>
+                    <!-- Include other data fields as needed -->
+                    <td><input type="checkbox" name="select[]" value="<%= i %>" onclick="event.stopPropagation()"></td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
         
-        <div>
-            <select class="form-control" name="option" id="option">
-                <option name="dnth" id="dnth" value="">DNTH</option>
-                <option name="ttt" id="ttt" value="">TTT</option>
-                <option name="nt" id="nt" value="">NT</option>
-            </select>
-        </div>
-        <button type="submit" id="create_pd_qr" class="btn btn-primary">Create PD QR</button>
-        </form>
+            <!-- Add a submit button to send the checked data to the server -->
+            <button class="btn btn-primary" id="dnth_submit" name="dnth_submit[]" type="submit">Update PD QR (DNTH)</button>
+            <button class="btn btn-info" id="ttt_submit" name="ttt_submit[]" type="submit">Update PD QR (TTT)</button>
+            <button class="btn btn-warning" id="nts_submit" name="nts_submit[]" type="submit">Update PD QR (NTS)</button>
+          </form>
     </div>
 
 
@@ -240,6 +207,10 @@
                 });
             });
         });
+        function checkRow(row) {
+            const checkbox = row.querySelector('input[type="checkbox"]');
+            checkbox.checked = !checkbox.checked;
+        }
 
     </script>
     
