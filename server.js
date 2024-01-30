@@ -11,6 +11,9 @@ const app = express();
 app.use(cookieParser());
 app.set("view engine", "ejs");
 app.use(express.static('public'));
+app.use(express.urlencoded({ extended: true }));
+// Parse JSON bodies
+app.use(bodyParser.json());
 
 const server = app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
@@ -190,8 +193,12 @@ app.get('/admin_page/master_setting', isAuthenticated, async (req, res) => {
         connection.release();
 
         const is_fac1_receive = master_datas.map(data => data.is_fac1_receive.toString('hex'));
-        console.log('Master datas : ', master_datas);
-        console.log("Is Fac1 Receive : ", is_fac1_receive);
+        // console.log('Master datas : ', master_datas);
+        // console.log("Is Fac1 Receive : ", is_fac1_receive);
+
+        // If is_fac1_receive change to '01' let insert that data to tb_dnth
+        // Check if the entry already exists in tb_dnth
+
         res.render('master_setting', {master_datas: master_datas, is_fac1_receive: is_fac1_receive});
 
     }
@@ -278,7 +285,7 @@ app.post('/admin_page/master_setting/editing', async (req, res) => {
 
         
 
-        res.redirect('/admin_page/master_setting');
+        res.redirect(`/admin_page/master_setting`);
     }
     catch (error) {
         console.error('Error : ', error);
@@ -410,8 +417,9 @@ app.post('/admin_page/receive_scan_master/receive_box_complete', async (req, res
 //------------------------------------DNTH SCAN RECEIVEING FUNCTION-------------------------------------------------
 // DNTH Internal data
 app.get('/dnth_data', isAuthenticated, async (req, res) => {
+    let connection;
     try {
-        const connection = await pool.getConnection();
+        connection = await pool.getConnection();
 
         const [get_qr_box] = await connection.execute(`
             SELECT qr_box FROM tb_master_packing WHERE is_fac1_receive = 1
@@ -421,7 +429,6 @@ app.get('/dnth_data', isAuthenticated, async (req, res) => {
             const [receive_datas] = await connection.execute(`
                 SELECT partNumber, qty FROM tb_master_packing WHERE qr_box = ?
                 `, [get_qr_box[0].qr_box]);
-            connection.release();
             console.log(receive_datas[0].partNumber, receive_datas[0].qty);
 
             // Create DNTH Work order relative from part number
@@ -455,45 +462,180 @@ app.get('/dnth_data', isAuthenticated, async (req, res) => {
 
 //------------------------------------DNTH CREATE WORK ORDER FUNCTION-------------------------------------------------
 // DNTH Create Work order page 
-app.get('/create_work_order', isAuthenticated, async (req, res) => {
+// app.get('/create_work_order', isAuthenticated, async (req, res) => {
+//     try {
+
+//         const connection = await pool.getConnection();
+//         const [get_datas] = await connection.execute(`
+//             SELECT qr_kanban_in, qr_prod, date_in_prod, time_in_prod, date_out_prod, time_out_prod, 
+//             total_ok_prod, total_ng_prod, operator FROM tb_dnth
+//         `);
+//         console.log(get_datas);
+
+//         res.render('create_wo', {get_datas: get_datas});
+
+//     } catch {
+//         console.error('Error : ', error);
+//         res.status(500);
+//     }
+// });
+// app.get('/create_work_order/popup_content', (req, res) => {
+//     res.render('popup');
+// });
+// // DNTH regiter QR Production endpoint
+// app.post('/create_wo/registing', async (req, res) => {
+//     try {
+//         const connection = await pool.getConnection();
+//         const {qr_prod, qr_kanban_in} = req.body;
+//         console.log(qr_prod, qr_kanban_in);
+
+//         await connection.execute(`
+//             UPDATE tb_dnth SET qr_prod = ? WHERE qr_kanban_in = ?
+//         `, [qr_prod, qr_kanban_in]);
+//         connection.release();
+
+//         res.redirect('/create_work_order');
+
+//     } catch {
+//         console.error('Error : ', error);
+//         res.status(500);
+//     }
+// })
+
+// PC page
+app.get('/pc_page', isAuthenticated, async (req, res) => {
+    let connection;
     try {
+        connection = await pool.getConnection();
 
-        const connection = await pool.getConnection();
-        const [get_datas] = await connection.execute(`
-            SELECT qr_kanban_in, qr_prod, date_in_prod, time_in_prod, date_out_prod, time_out_prod, 
-            total_ok_prod, total_ng_prod, operator FROM tb_dnth
+        const [get_dnth_datas] = await connection.execute(`
+            SELECT * FROM tb_dnth;
         `);
-        console.log(get_datas);
 
-        res.render('create_wo', {get_datas: get_datas});
+        const [get_dnth_group_datas] = await connection.execute(`
+            SELECT qr_pack_in, qr_kanban_in, SUM(qty_kanban_in) AS totalQty, partNumber, qr_prod
+            FROM tb_dnth GROUP BY partNumber;
+        `)
+
+        // Add column
+        await addColumnIfNotExists(connection, 'tb_dnth', 'totalQtyIn', 'INT')
+
+        // Update totalQty of each part number 
+        // Fetch the total qty for each PartNumber
+        const [partNumberTotals] = await connection.execute(`
+            SELECT partNumber, SUM(qty_kanban_in) AS totalQty
+            FROM tb_dnth 
+            GROUP BY partNumber
+        `);
+        // Update the totalQtyIn column for each partNumber
+        for (const {partNumber, totalQty} of partNumberTotals) {
+            await connection.execute(`
+                UPDATE tb_dnth SET totalQtyIn = ? WHERE partNumber = ?
+            `, [totalQty, partNumber]);
+        }
+
+        console.log('Total qty each part number updated successfully');
+
+        res.render('pc_page', {dnth_group_datas: get_dnth_group_datas, dnth_datas: get_dnth_datas});
 
     } catch {
         console.error('Error : ', error);
         res.status(500);
+    } finally {
+        if (connection) {
+            connection.release();
+        }
     }
 });
-app.get('/create_work_order/popup_content', (req, res) => {
-    res.render('popup');
-});
-// DNTH regiter QR Production endpoint
-app.post('/create_wo/registing', async (req, res) => {
+// PC shop by part number
+app.post('/pc_page/update_qr_prod_by_pn', async (req, res) => {
+    let connection;
     try {
-        const connection = await pool.getConnection();
-        const {qr_prod, qr_kanban_in} = req.body;
-        console.log(qr_prod, qr_kanban_in);
+        connection = await pool.getConnection();
+        const formData = req.body;
+        const length = formData.qr_pack_in.length;
+        console.log(formData);
 
-        await connection.execute(`
-            UPDATE tb_dnth SET qr_prod = ? WHERE qr_kanban_in = ?
-        `, [qr_prod, qr_kanban_in]);
+        // Iterate over each index
+        for (let i = 0; i < length; i++) {
+            const qrPackingList = formData.qr_pack_in[i];
+            const partNumber = formData.partNumber[i];
+            const qrProd = formData.qr_prod[i];
+
+            // Update the MySQL table with the received data
+            const sql = `
+                UPDATE tb_dnth 
+                SET qr_prod = '${qrProd}' 
+                WHERE qr_pack_in = '${qrPackingList}' AND partNumber = '${partNumber}'
+            `;
+            await connection.query(sql);
+        }
         connection.release();
+        
+        console.log('QR Prod updated successfully');
+        res.redirect('/dnth_data');
 
-        res.redirect('/create_work_order');
-
-    } catch {
-        console.error('Error : ', error);
-        res.status(500);
+    } catch (error) { // Fixing the error variable name here
+        console.error('Error : ', error); // Correcting the variable name here
+        res.status(500).send('Internal Server Error');
     }
 })
+// PC shop by qty
+app.post('/pc_page/update_qr_prod_by_qty', async (req, res) => {
+    let connection;
+    try {
+        connection = await pool.getConnection();
+        // Retrieve the checked data from the request body
+        const checkedIndexes = req.body.checkedRows;
+
+        // Process the checked data and update the MySQL database
+        checkedIndexes.forEach((index) => {
+            // Retrieve the corresponding data based on the index
+            const rowData = dnth_datas[index]; // Replace dnth_datas with the actual data source
+
+            console.log(rowData);
+        })
+
+        res.redirect('/dnth_data');
+
+    } catch (error) {
+        console.error('Error : ', error);
+        res.status(500).send('Internal Server Error');
+    }
+});
+
+
+
+
+
+
+
+
+
+
+
+// ______________________________________________TEST_____________________________________________
+app.get('/test', (req, res) => {
+    res.render('test');
+});
+app.post('/submit', (req, res) => {
+    const checkboxes = req.body.checkboxes; // an array of the checked checkbox values
+    const texts = req.body.texts; // an array of the corresponding text values
+  
+    // Process the data as needed
+    // For example, you can filter out the checked checkboxes and their corresponding texts
+    const checkedData = checkboxes.reduce((acc, checkbox, index) => {
+      if (checkbox) {
+        acc.push(texts[index]);
+      }
+      return acc;
+    }, []);
+
+    console.log(checkedData);
+  
+    // Render a response using an EJS template
+    // res.render('result', { checkedData });
+  });
 
 
 
@@ -504,7 +646,29 @@ app.post('/create_wo/registing', async (req, res) => {
 //_____________________________________________________________________________________________________________________________________
 //_____________________________________________________________________________________________________________________________________
 //_____________________________________________________________________________________________________________________________________
+// Function to check if a column exists in a table 
+async function doesColumnExist(connection, tableName, columnName) {
+    const [rows] = await connection.execute(`
+        SELECT * FROM information_schema.columns
+        WHERE table_name = ? AND column_name = ?
+    `, [tableName, columnName]);
 
+    return rows.length > 0;
+}
+
+// FUnction to add a column to a table if it does not exist
+async function addColumnIfNotExists(connection, tableName, columnName, columnType) {
+    const columnExists = await doesColumnExist(connection, tableName, columnName);
+
+    if (!columnExists) {
+        await connection.execute(`
+            ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${columnType}
+        `);
+        console.log(`Column '${columnName}' added to table '${tableName}'`);
+    } else {
+        console.log(`Column '${columnName}' already exits in table '${tableName}'`);
+    }
+}
 
 
 

@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        .mode {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="/admin_page">Home</a>
+        <a href="/admin_page/master_main">Master Main</a>
+        <a href="/admin_page/master_setting">Master Setting</a>
+        <a href="/admin_page/receive_scan_master">Receive Scan</a>
+        <a href="/dnth_data">DNTH Data</a>
+        <a href="/pc_page">PC Page</a>
+        <a href="/test">Test</a>
+        <a href="/logout">Logout</a>
+    </div>
+
+    <div>
+        <h1>PC Order Shop Page</h1>
+    </div>
+
+    <div>
+        <div>
+            <h3>Shop by : </h3>
+        </div>
+        <button type="button" class="btn btn-primary" id="btn_pn">Part Number</button>
+        <button type="button" class="btn btn-warning" id="btn_qty">Quatity (QTY)</button>
+    </div>
+
+    <div id="pn_mode" class="mode">
+        <form action="/pc_page/update_qr_prod_by_pn" method="post">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>QR PACKING LIST IN</th>
+                        <th>TOTAL QTY</th>
+                        <th>PART NUMBER</th>
+                        <th>QR PRODUCTION</th>
+                        <th>ACTIONS</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% dnth_group_datas.forEach((data) => { %> 
+                        <tr>
+                        <td>
+                            <input name="qr_pack_in" id="qr_pack_in" style="border: 0px solid white;" type="text" value="<%= data.qr_pack_in %>" readonly>
+                        </td>
+                        <td>
+                            <input name="totalQty" id="totalQty" type="text" value="<%= data.totalQty %>" readonly>
+                        </td>
+                        <td>
+                            <input name="partNumber" id="partNumber" type="text" value="<%= data.partNumber %>" readonly>
+                        </td>
+                        <td>
+                            <input value="<%= data.qr_prod %>" name="qr_prod" id="qr_prod_<%= data.partNumber %>" type="text" readonly>
+                        </td>
+                        <td id="btn_action">
+                            <button type="button" class="btn btn-primary btn_generate_qr" data-type="DNTH" data-part-number="<%= data.partNumber %>">DNTH PD QR</button>
+                            <button type="button" class="btn btn-info btn_generate_qr" data-type="TTT" data-part-number="<%= data.partNumber %>">TTT PD QR</button>
+                            <button type="button" class="btn btn-secondary btn_generate_qr" data-type="NT" data-part-number="<%= data.partNumber %>">NT PD QR</button>
+                            <button type="button" class="btn btn-danger" id="btn_reset_dnth">Reset DNTH</button>
+                            <button type="button" class="btn btn-danger" id="btn_reset_ttt">Reset TTT</button>
+                            <button type="button" class="btn btn-danger" id="btn_reset_nt">Reset NT</button>
+                        </td>
+                    </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+            <button type="submit" class="btn btn-success">Save PD QR</button>
+        </form>
+
+    </div>
+
+    <div id="qty_mode" class="mode">
+        <form id="qty_form" action="/pc_page/update_qr_prod_by_qty" method="post">
+            <!-- Add a table to display the data -->
+            <table class="table">
+              <!-- Table headers -->
+              <thead>
+                <!-- Your table headers -->
+                <th>QR PACKING LIST IN</th>
+                <th>QR KANBAN IN</th>
+                <th>QTY</th>
+                <th>PART NUMBER</th>
+                <th>QR PRODUCTION</th>
+                <th>SHOP</th>
+              </thead>
+              <tbody>
+                <!-- Loop through the data and display each row -->
+                <% dnth_datas.forEach((data, index) => { %>
+                  <tr>
+                    <!-- Display the data and include a checkbox for each row -->
+                    <td><%= data.qr_pack_in %></td>
+                    <td><%= data.qr_kanban_in %></td>
+                    <td><%= data.qty_kanban_in %></td>
+                    <td><%= data.partNumber %></td>
+                    <td><%= data.qr_prod %></td>
+                    <!-- Include other data fields as needed -->
+                    <td><input type="checkbox" name="checkedRows" value="<%= index %>"></td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+        
+            <!-- Add a submit button to send the checked data to the server -->
+            <button class="btn btn-primary" type="submit">Update Checked Data</button>
+          </form>
+    </div>
+
+    <div id="qty_mode" class="mode">
+        <form id="qty_form" action="/pc_page/update_qr_prod_by_qty" method="post">
+        <table class="table" id="qty_main_table">
+            <thead>
+                    <th>QR PACKING LIST IN</th>
+                    <th>QR KANBAN IN</th>
+                    <th>QTY</th>
+                    <th>PART NUMBER</th>
+                    <th>QR PRODUCTION</th>
+                    <th>SHOP</th>
+            </thead>
+            <% dnth_datas.forEach((data, index) => { %> 
+            <tbody>
+                
+                        <td>
+                            <input value="<%= data.qr_pack_in %>" type="text" readonly id="qr_pack_in_<%= index %>" name="qr_pack_in[<%= index %>]">
+                        </td>
+                        <td>
+                            <input value="<%= data.qr_kanban_in %>" type="text" readonly id="qr_kanban_in_<%= index %>" name="qr_kanban_in[<%= index %>]">
+                        </td>
+                        <td>
+                            <input value="<%= data.qty_kanban_in %>" type="text" readonly id="qty_kanban_in_<%= index %>" name="qty_kanban_in[<%= index %>]">
+                        </td>
+                        <td>
+                            <input value="<%= data.partNumber %>" type="text" readonly id="partNumber_<%= index %>" name="partNumber[<%= index %>]">
+                        </td>
+                        <td>
+                            <input value="<%= data.qr_prod %>" type="text" readonly id="qr_prod_<%= index %>" name="qr_prod[<%= index %>]">
+                        </td>
+                        <td>
+                            <input type="checkbox" name="shop_this" id="shop_this_<%= index %>">
+                        </td>
+            </tbody>
+            <% }) %>
+        </table>
+        
+        <div>
+            <select class="form-control" name="option" id="option">
+                <option name="dnth" id="dnth" value="">DNTH</option>
+                <option name="ttt" id="ttt" value="">TTT</option>
+                <option name="nt" id="nt" value="">NT</option>
+            </select>
+        </div>
+        <button type="submit" id="create_pd_qr" class="btn btn-primary">Create PD QR</button>
+        </form>
+    </div>
+
+
+    <script>
+        // for select button choose mode
+        $(document).ready(function () {
+            $('#btn_pn').click(function () {
+                $('#pn_mode').show();
+                $('#qty_mode').hide();
+            });
+
+            $('#btn_qty').click(function () {
+                $('#pn_mode').hide();
+                $('#qty_mode').show();
+            });
+
+            // Delegate click event to the parent element
+            $('#pn_mode').on('click', '.btn_generate_qr', function (event) {
+                event.preventDefault();
+                const type = $(this).data('type');
+                const partNumber = $(this).data('part-number');
+                const qr_prod = generateQR(type, partNumber);
+                $(`#qr_prod_${partNumber}`).val(qr_prod);
+            });
+
+            // Reset local storage for DNTH
+            $('#pn_mode').on('click', '#btn_reset_dnth', function () {
+                resetLocalStorage('DNTH');
+            });
+
+            // Reset local storage for TTT
+            $('#pn_mode').on('click', '#btn_reset_ttt', function () {
+                resetLocalStorage('TTT');
+            });
+
+            // Reset local storage for NT
+            $('#pn_mode').on('click', '#btn_reset_nt', function () {
+                resetLocalStorage('NT');
+            });
+
+            // Function to generate QR code
+            function generateQR(type) {
+                // Retrieve last generated number from local storage
+                let lastNumber = localStorage.getItem(type) || 0;
+                lastNumber = parseInt(lastNumber);
+                // Increment number
+                lastNumber++;
+                // Pad number with leading zeros
+                const paddedNumber = String(lastNumber).padStart(4, '0');
+                // Store updated number in local storage
+                localStorage.setItem(type, paddedNumber);
+                // Generate QR code
+                return type + 'PD' + paddedNumber;
+            }
+
+            function resetLocalStorage(type) {
+                localStorage.removeItem(type);
+                $('.btn_generate_qr').each(function() {
+                    const partNumber = $(this).data('part-number');
+                    const qrProdInput = $(`#qr_prod_${partNumber}`);
+                    // Check if qr_prod is empty before clearing the value
+                    if (qrProdInput.val().trim() === '') {
+                        qrProdInput.val('');
+                    }
+                });
+            }
+
+            //_____________________________________QTY MODE___________________________________________
+        });
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const rows = document.querySelectorAll("#qty_main_table tbody tr");
+            rows.forEach(row => {
+                row.addEventListener("click", function () {
+                    const checkbox = row.querySelector("input[type='checkbox']");
+                    checkbox.checked = !checkbox.checked;
+                });
+            });
+        });
+
+    </script>
+    
+</body>
+</html>

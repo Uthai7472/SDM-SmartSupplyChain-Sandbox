@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <form action="/submit" method="POST">
+        <% for (let i = 0; i < 5; i++) { %>
+          <div>
+            <input type="checkbox" name="checkboxes[]" value="<%= i %>">
+            <input type="text" name="texts[]" placeholder="Text <%= i + 1 %>">
+          </div>
+        <% } %>
+        <button type="submit">Submit</button>
+      </form>
+    
+</body>
+</html>
