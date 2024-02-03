@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        .inventory-flow {
+            width: 100%;
+            height: 22vh;
+            display: flex;
+            justify-content: center;
+            position: relative;
+            /* border: 3px solid red; */
+        }
+        .inventory-flow .text-in {
+            position: absolute;
+            /* border: 1px solid gray; */
+            /* display: flex; */
+            left: 26vw;
+            top: 12%;
+        }
+        .box-in {
+            border: 1px solid gray;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(238, 214, 80, 1.0);
+            padding: 4px 2px;
+            border-radius: 8px;
+            margin-bottom: 2px;
+            /* height: 3vh; */
+            font-size: 20px;
+            font-weight: 500;
+        }
+        .topic {
+            display: flex;
+            justify-content: center;
+            /* border: 1px solid red; */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <a href="/admin_page">Home</a>
+        <a href="/admin_page/master_main">Master Main</a>
+        <a href="/admin_page/master_setting">Master Setting</a>
+        <a href="/admin_page/receive_scan_master">Receive Scan</a>
+        <a href="/dnth_data">DNTH Data</a>
+        <a href="/pc_page">PC Page</a>
+        <a href="/prod_page">PD Page</a>
+        <a href="/create_pl">Create PL</a>
+        <a href="/logout">Logout</a>
+    </div>
+
+    <!-- Inventory Flow -->
+    <div class="inventory-flow">
+        <img src="/static/picture/Delivery.jpg" alt="">
+        <div class="text-in">
+            <!-- <h5>TSK>DNTH</h5> -->
+            <!-- <div><h4>PART NUMBER | QTY | BOX</h4></div> -->
+            <% get_tskDatas.forEach((row) => { %>
+                    <!-- <td><%= row.qr_packingList %></td> -->
+                    <!-- <div class="box-in"><%= row.qr_packingList %> | <%= row.partNumber %>/<%= row.qty %></div> -->
+                    <!-- <td><%= row.totalActBox %>/<%= row.totalBox %></td> -->
+            <% }) %>
+        </div>
+    </div>
+
+    <div class="topic">
+        <h1>Create Packing List (Delivery)</h1>
+    </div>
+
+    <div id="qty_mode" class="mode">
+        <form id="qty_form" action="/create_pl/update_qr_pl" method="post">
+            <!-- Add a table to display the data -->
+            <table class="table">
+              <!-- Table headers -->
+              <thead>
+                <tr>
+                    <!-- Your table headers -->
+                    <th>QR KANBAN OUT</th>
+                    <th>QTY</th>
+                    <th>PART NUMBER</th>
+                    <th>QR PACKING LIST</th>
+                    <th>SELECTED</th>
+                </tr>
+                </thead>
+                <tbody>
+                    <% get_tskDatas.forEach((row, i) => { %>
+                        <tr onclick="checkRow(this)">
+                            <td>
+                                <input type="text" name="qr_box[]" value="<%= row.qr_box %>" readonly>
+                            </td>
+                            <td>
+                                <input type="text" name="qty[]" value="<%= row.qty %>" readonly>
+                            </td>
+                            <td>
+                                <input type="text" name="partNumber[]" value="<%= row.partNumber %>" readonly>
+                            </td>
+                            <td>
+                                <input type="text" name="qr_packingList[]" value="<%= row.qr_packingList %>" readonly>
+                            </td>
+                            <td>
+                                <input type="checkbox" name="select[]" value="<%= i %>" onclick="event.stopPropagation()">
+                            </td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+
+            </table>
+        
+            <!-- Add a submit button to send the checked data to the server -->
+            <button class="btn btn-primary" id="tsk_submit" name="tsk_submit[]" type="submit">Create PL (TSK)</button>
+            <button class="btn btn-primary" id="dnth_submit" name="dnth_submit[]" type="submit">Create PL (DNTH)</button>
+            <button class="btn btn-info" id="ttt_submit" name="ttt_submit[]" type="submit">Create PL (TTT)</button>
+            <button class="btn btn-warning" id="nts_submit" name="nts_submit[]" type="submit">Create PL (NTS)</button>
+          </form>
+    </div>
+    <div>
+        <a href="/create_pl/delete_pl" class="btn btn-danger">Delete QR PL</a>
+    </div>
+
+    <script>
+        function checkRow(row) {
+            const checkbox = row.querySelector('input[type="checkbox"]');
+            checkbox.checked = !checkbox.checked;
+        }
+    </script>
+    
+</body>
+</html>

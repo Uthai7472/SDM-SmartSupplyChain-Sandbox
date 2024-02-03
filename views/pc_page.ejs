@@ -20,7 +20,7 @@
         <a href="/admin_page/receive_scan_master">Receive Scan</a>
         <a href="/dnth_data">DNTH Data</a>
         <a href="/pc_page">PC Page</a>
-        <a href="/test">Test</a>
+        <a href="/prod_page">PD Page</a>
         <a href="/logout">Logout</a>
     </div>
 
@@ -66,10 +66,10 @@
                         <td id="btn_action">
                             <button type="button" class="btn btn-primary btn_generate_qr" data-type="DNTH" data-part-number="<%= data.partNumber %>">DNTH PD QR</button>
                             <button type="button" class="btn btn-info btn_generate_qr" data-type="TTT" data-part-number="<%= data.partNumber %>">TTT PD QR</button>
-                            <button type="button" class="btn btn-secondary btn_generate_qr" data-type="NT" data-part-number="<%= data.partNumber %>">NT PD QR</button>
+                            <button type="button" class="btn btn-secondary btn_generate_qr" data-type="NTS" data-part-number="<%= data.partNumber %>">NTS PD QR</button>
                             <button type="button" class="btn btn-danger" id="btn_reset_dnth">Reset DNTH</button>
                             <button type="button" class="btn btn-danger" id="btn_reset_ttt">Reset TTT</button>
-                            <button type="button" class="btn btn-danger" id="btn_reset_nt">Reset NT</button>
+                            <button type="button" class="btn btn-danger" id="btn_reset_nt">Reset NTS</button>
                         </td>
                     </tr>
                     <% }) %>
@@ -93,7 +93,7 @@
                     <th>QTY</th>
                     <th>PART NUMBER</th>
                     <th>QR PRODUCTION</th>
-                    <th>SHOP</th>
+                    <th>SELECTED</th>
                 </tr>
                 </thead>
               <tbody>
@@ -165,7 +165,7 @@
 
             // Reset local storage for NT
             $('#pn_mode').on('click', '#btn_reset_nt', function () {
-                resetLocalStorage('NT');
+                resetLocalStorage('NTS');
             });
 
             // Function to generate QR code

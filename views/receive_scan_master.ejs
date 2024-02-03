@@ -18,6 +18,8 @@
         <a href="/admin_page/master_setting">Master Setting</a>
         <a href="/admin_page/receive_scan_master">Receive Scan</a>
         <a href="/dnth_data">DNTH Data</a>
+        <a href="/pc_page">PC Page</a>
+        <a href="/prod_page">PD Page</a>
         <a href="/logout">Logout</a>
     </div>
 
@@ -32,6 +34,18 @@
             <button type="submit" class="btn btn-primary">Submit</button>
         </form>
     </div>
+
+
+    <script>
+        window.onload = function() {
+            document.getElementById("qr_packingList").focus();
+        };
+
+        <% if (errorMessage.length > 0) { %>
+            alert('<%= errorMessage[0] %>');
+        <% } %>
+        // window.location.href = '/admin_page/receive_scan_master';
+    </script>
     
 </body>
 </html>

@@ -6,9 +6,35 @@
     <title>Document</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
     <style>
-        /* h1 {
-            color: rgb(143, 229, 158);
-        } */
+        .inventory-flow {
+            width: 100%;
+            height: 22vh;
+            display: flex;
+            justify-content: center;
+            position: relative;
+            /* border: 3px solid red; */
+        }
+        .inventory-flow .text-in {
+            position: absolute;
+            /* border: 1px solid gray; */
+            /* display: flex; */
+            left: 26vw;
+            top: 12%;
+        }
+        .box-in {
+            border: 1px solid gray;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(238, 214, 80, 1.0);
+            padding: 4px 2px;
+            border-radius: 8px;
+            margin-bottom: 2px;
+            /* height: 3vh; */
+            font-size: 20px;
+            font-weight: 500;
+        }
+
     </style>
 </head>
 <body>
@@ -18,7 +44,25 @@
         <a href="/admin_page/master_setting">Master Setting</a>
         <a href="/admin_page/receive_scan_master">Receive Scan</a>
         <a href="/dnth_data">DNTH Data</a>
+        <a href="/pc_page">PC Page</a>
+        <a href="/prod_page">PD Page</a>
         <a href="/logout">Logout</a>
+    </div>
+
+    <!-- Inventory Flow -->
+    <div class="inventory-flow">
+        <img src="/static/picture/FactoryFlow.jpg" alt="">
+        <div class="text-in">
+            <!-- <h5>TSK>DNTH</h5> -->
+            <!-- <div><h4>PART NUMBER | QTY | BOX</h4></div> -->
+            <% master_sum_by_partNumber.forEach((row) => { %>
+                    <!-- <td><%= row.qr_packingList %></td> -->
+                    <div class="box-in"><%= row.partNumber %> | <%= row.totalActQty %>/<%= row.totalQty %> | 
+                        <%= row.totalActBox %>/<%= row.totalBox %></div>
+                    <!-- <td><%= row.totalActBox %>/<%= row.totalBox %></td> -->
+            <% }) %>
+        </div>
+
     </div>
 
     <div>
@@ -123,7 +167,7 @@
                     </div>
                 <% } else { %>
                     <div>
-                        <h2 style="color: red">NOT COMPLETED</h2>
+                        <h2 style="color: red">INCOMPLETED</h2>
                     </div>   
                 <% } %>
                 <!-- </tbody>
@@ -132,6 +176,14 @@
 
 
     <script>
+        window.onload = function() {
+            document.getElementById("qr_box").focus();
+        };
+
+        <% if (errorMessage.length > 0) { %>
+            alert('<%= errorMessage[0] %>')
+        <% } %>
+
         document.getElementById('qr_box').addEventListener('input', function() {
         const qrBoxValue = this.value;
         const kanbanDateInInput = document.getElementById('kanban_date_in');
