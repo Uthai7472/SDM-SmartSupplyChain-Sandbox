@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <style>
+        .inventory-flow {
+            width: 100%;
+            height: 22vh;
+            display: flex;
+            justify-content: center;
+            position: relative;
+            /* border: 3px solid red; */
+        }
+        .inventory-flow .text-in {
+            position: absolute;
+            /* border: 1px solid gray; */
+            /* display: flex; */
+            left: 26vw;
+            top: 12%;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="/admin_page">Home</a>
+        <a href="/admin_page/master_main">Master Main</a>
+        <a href="/admin_page/master_setting">Master Setting</a>
+        <a href="/admin_page/receive_scan_master">Receive Scan</a>
+        <a href="/dnth_data">DNTH Data</a>
+        <a href="/pc_page">PC Page</a>
+        <a href="/prod_page">PD Page</a>
+        <a href="/logout">Logout</a>
+    </div>
+
+    <!-- Inventory Flow -->
+    <div class="inventory-flow">
+        <img src="/static/picture/Machine_OUT.png" alt="">
+        <div class="text-in">
+        </div>
+
+    </div>
+
+    <div>
+        <h1>Production Output</h1>
+    </div>
+    <hr>
+
+    <!-- <form action="#" method="post"> -->
+        <div class="mb-3">
+            <label for="qr_prod" name="qr_prod" class="">QR Production</label>
+            <input type="text" name="qr_prod" id="qr_prod" class="form-control">
+        </div>
+        <div class="mb-3">
+            <label for="date_out_prod" name="date_out_prod" class="">Date Out Production</label>
+            <input type="text" name="date_out_prod" id="date_out_prod" class="form-control">
+        </div>
+        <div class="mb-3">
+            <label for="time_out_prod" name="time_out_prod" class="">Time Out Production</label>
+            <input type="text" name="time_out_prod" id="time_out_prod" class="form-control">
+        </div>
+        
+        <div class="fill-operator" style="display: none;">
+            <div class="mb-3">
+                <label for="operator" name="operator" class="">Operator</label>
+                <input type="text" name="operator" id="operator" class="form-control">
+            </div>
+            <div>
+                <a href="#" id="submit_output" name="submit_output" class="btn btn-primary">Submit Output</a>
+            </div>
+        </div>
+
+        
+    <!-- </form> -->
+
+
+    <script>
+        window.onload = () => {
+            document.getElementById("qr_prod").focus();
+        }
+
+        // document.addEventListener("keydown", function(event) {
+        //     if (event.key === "Enter") {
+        //         const operatorInput = document.getElementById("operator");
+        //         if (document.activeElement === operatorInput) {
+        //             event.preventDefault();
+        //             document.getElementById("submit_output").click();
+        //         } else {
+        //             document.querySelector(".fill-operator").style.display = "block";
+        //             document.getElementById("submit_output").click();
+        //         }
+        //     }
+        // });
+
+        // document.addEventListener("keydown", function(event) {
+        //     if (event.key === "Enter") {
+        //     document.querySelector(".fill-operator").style.display = "block";
+        //     }
+        // });
+
+        document.addEventListener("keydown", function(event) {
+            if (event.key === "Enter") {
+                const operatorInput = document.getElementById("operator");
+                if (document.activeElement === operatorInput) {
+                    event.preventDefault();
+                    document.getElementById("submit_output").click();
+                } else {
+                    document.querySelector(".fill-operator").style.display = "block";
+                }
+            }
+        });
+
+        document.getElementById('qr_prod').addEventListener('input', function () {
+            const qrProdValue = this.value;
+            const dateOutProdInput = document.getElementById('date_out_prod');
+            const timeOutProdInput = document.getElementById('time_out_prod');
+
+            if (qrProdValue.length >= 3) {
+                const currentDate = new Date();
+                const currentYear = currentDate.getFullYear();
+                const currentMonth = String(currentDate.getMonth() + 1).padStart(2, '0');
+                const currentDay = String(currentDate.getDate()).padStart(2, '0');
+                const currentHours = String(currentDate.getHours()).padStart(2, '0');
+                const currentMinutes = String(currentDate.getMinutes()).padStart(2, '0');
+                const currentSeconds = String(currentDate.getSeconds()).padStart(2, '0');
+
+                dateOutProdInput.value = `${currentYear}-${currentMonth}-${currentDay}`;
+                timeOutProdInput.value = `${currentHours}:${currentMinutes}:${currentSeconds}`;
+            } else {
+                dateOutProdInput.value = '';
+                timeOutProdInput.value = '';
+            }
+        });
+    </script>
+    
+</body>
+</html>

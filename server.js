@@ -708,7 +708,7 @@ app.post('/pc_page/update_qr_prod_by_qty', async (req, res) => {
                 WHERE qr_pack_in = ? AND qr_kanban_in = ?;
             `;
             await connection.query(sql, [uniqueCode, qr_pack_in, qr_kanban_in]);
-            connection.release();
+            await connection.release();
         }
 
         console.log("Update QR_PROD by QTY successfully");
@@ -722,14 +722,81 @@ app.post('/pc_page/update_qr_prod_by_qty', async (req, res) => {
 });
 
 // ____________________________PD PAGE_______________________________________
-app.get('/prod_page', isAuthenticated, (req, res) => {
-    res.render('prod_page');
+app.get('/prod_page', isAuthenticated, async (req, res) => {
+    let connection;
+    try {
+        connection = await pool.getConnection();
+
+        const [get_prod_datas] = await connection.query(`
+            SELECT qr_pack_in, qr_kanban_in, qr_prod, date_in_prod, time_in_prod, date_out_prod, time_out_prod
+            FROM tb_dnth
+        `);
+        await connection.release();
+
+        res.render('prod_page', {get_prod_datas: get_prod_datas});
+
+    } catch (error) {
+        console.error('Error : ', error);
+        res.status(500).send('Internal Server Error');
+    }
 });
 // Production inputing endpoint
 app.post('/prod_page/inputing', async (req, res) => {
     let connection;
     try {
         connection = await pool.getConnection();
+
+        const date_in_prod = req.body.date_in_prod;
+        const time_in_prod = req.body.time_in_prod;
+        const qr_prod = req.body.qr_prod;
+        // Update date/time in production 
+        await connection.query(`
+            UPDATE tb_dnth SET date_in_prod = ?, time_in_prod = ?
+            WHERE qr_prod = ?
+        `, [date_in_prod, time_in_prod, qr_prod], (err, result) => {
+            if (err) {
+                console.log(err);
+            } else {
+                console.log("Insert dat/time in production completed");
+            }
+        });
+        await connection.release();
+
+        res.redirect('/prod_page');
+
+    } catch (error) {
+        console.error('Error : ', error);
+        res.status(500).send('Internal Server Error');
+    }
+});
+app.get('/prod_page/reset_in_out', isAuthenticated, async (req, res) => {
+    let connection;
+    try {
+        const reset_code = req.query.reset_code;
+        const qr_pack_in = req.query.qr_pack_in;
+        if (reset_code === '177765278830') {
+            console.log("Correct reset code");
+            console.log(qr_pack_in);
+
+            connection = await pool.getConnection();
+            await connection.query('UPDATE tb_dnth SET date_in_prod = NULL, time_in_prod = NULL, date_out_prod = NULL, time_out_prod = NULL ');
+            await connection.release();
+
+            res.redirect('/prod_page');
+
+        } else {
+            console.log("Wrong reset code !");
+            res.status(500).send('Wrong URL reset code');
+        }
+
+    } catch (error) {
+        console.error('Error : ', error);
+        res.status(500).send('Internal Server Error');
+    }
+});
+app.get('/prod_page/prod_output', isAuthenticated, async (req, res) => {
+    try {
+        res.render('prod_output');
 
     } catch (error) {
         console.error('Error : ', error);

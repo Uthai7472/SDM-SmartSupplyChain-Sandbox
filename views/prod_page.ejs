@@ -6,6 +6,41 @@
     <title>Document</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        .inventory-flow {
+            width: 100%;
+            height: 22vh;
+            display: flex;
+            justify-content: center;
+            position: relative;
+            /* border: 3px solid red; */
+        }
+        .inventory-flow .text-in {
+            position: absolute;
+            /* border: 1px solid gray; */
+            /* display: flex; */
+            left: 26vw;
+            top: 12%;
+        }
+        @keyframes blink {
+            0% {
+                background-color: green;
+            }
+            50% {
+                background-color: red;
+            }
+            100% {
+                background-color: green;
+            }
+        }
+        
+        .working-status {
+            width: 20px;
+            height: 20px;
+            border-radius: 10px 10px;
+            animation: blink 0.5s infinite;
+        }
+    </style>
 </head>
 <body>
 
@@ -20,13 +55,21 @@
         <a href="/logout">Logout</a>
     </div>
 
+    <!-- Inventory Flow -->
+    <div class="inventory-flow">
+        <img src="/static/picture/Machine_IN.png" alt="">
+        <div class="text-in">
+        </div>
+
+    </div>
+
     <div>
         <h1>Scan QR Master Packing List</h1>
     </div>
 
     <div>
         <form action="/prod_page/inputing" method="POST">
-            <label for="qr_prod" class="form-control" name="qr_prod">QR QR Production</label>
+            <label for="qr_prod" class="form-control" name="qr_prod">QR Production</label>
             <input type="text" id="qr_prod" class="v form-control mb-3" name="qr_prod">
             <label for="date_in_prod" class="date_in_prod" name="date_in_prod">Production Date IN</label>
             <input type="text" id="date_in_prod" class="date_in_prod form-control mb-3" name="date_in_prod" readonly>
@@ -38,9 +81,73 @@
     <hr>
 
     <h2>Production Detail Table</h2>
+    <div>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>QR BOX</th>
+                    <th>QR PRODUCTION</th>
+                    <th>DATE IN PD</th>
+                    <th>TIME IN PD</th>
+                    <th>DATE OUT PD</th>
+                    <th>TIME OUT PD</th>
+                    <th>OPERATOR</th>
+                    <th>STATUS</th>
+                    <!-- <th>QR PRODUCTION</th> -->
+                </tr>
+            </thead>
+            <tbody>
+                <% get_prod_datas.forEach((row) => { %> 
+                    <tr>
+                        <td>
+                            <input type="text" id="qr_kanban_in" name="qr_kanban_in[]" value="<%= row.qr_kanban_in %>" readonly>
+                        </td>
+                        <td>
+                            <input type="text" id="qr_prod" name="qr_prod[]" value="<%= row.qr_prod %>" readonly>
+                        </td>
+                        <td>
+                            <input type="text" id="date_in_prod" name="date_in_prod[]" value="<%= row.date_in_prod ? row.date_in_prod.toLocaleDateString('en-GB') : '' %>" readonly>
+                        </td>
+                        <td>
+                            <input type="text" id="time_in_prod" name="time_in_prod[]" value="<%= row.time_in_prod %>" readonly>
+                        </td>
+                        <td>
+                            <input type="text" id="date_out_prod" name="date_out_prod[]" value="<%= row.date_out_prod ? row.date_out_prod.toLocaleDateString('en-GB') : '' %>" readonly>
+                        </td>
+                        <td>
+                            <input type="text" id="time_out_prod" name="time_out_prod[]" value="<%= row.time_out_prod %>" readonly>
+                        </td>
+                        <td>
+                            <input type="text" id="operator" name="operator[]" value="<%= row.operator %>" readonly>
+                        </td>
+                        <td>
+                            <% if (row.date_in_prod) { %>
+                              <div class="working-status"></div>
+                            <% } else { %>
+                              <!-- Show nothing if date_in_prod is null -->
+                            <% } %>
+                        </td>
+                        <td></td>
+                    </tr>
+                <% }) %>
+            </tbody>
+        </table>
+    </div>
+    <div>
+        <a href="/prod_page/prod_output" class="btn btn-success">Output</a>
+        <a href="/prod_page/reset_in_out?reset_code=177765278830&qr_pack_in=<%= get_prod_datas[0].qr_pack_in %>" class="btn btn-danger">Reset IN/OUT Time</a>
+    </div>
     
 
     <script>
+        window.onload = function() {
+            document.getElementById("qr_prod").focus();
+        };
+
+        // function changeURL() {
+        //     window.location.href = "/prod_page";
+        // }
+
         document.getElementById('qr_prod').addEventListener('input', function () {
             const qrProdValue = this.value;
             const dateInProdInput = document.getElementById('date_in_prod');
