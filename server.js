@@ -728,7 +728,7 @@ app.get('/prod_page', isAuthenticated, async (req, res) => {
         connection = await pool.getConnection();
 
         const [get_prod_datas] = await connection.query(`
-            SELECT qr_pack_in, qr_kanban_in, qr_prod, date_in_prod, time_in_prod, date_out_prod, time_out_prod
+            SELECT qr_pack_in, qr_kanban_in, qr_prod, date_in_prod, time_in_prod, date_out_prod, time_out_prod, total_ok_prod, operator
             FROM tb_dnth
         `);
         await connection.release();
@@ -779,7 +779,7 @@ app.get('/prod_page/reset_in_out', isAuthenticated, async (req, res) => {
             console.log(qr_pack_in);
 
             connection = await pool.getConnection();
-            await connection.query('UPDATE tb_dnth SET date_in_prod = NULL, time_in_prod = NULL, date_out_prod = NULL, time_out_prod = NULL ');
+            await connection.query('UPDATE tb_dnth SET date_in_prod = NULL, time_in_prod = NULL, date_out_prod = NULL, time_out_prod = NULL, operator = NULL');
             await connection.release();
 
             res.redirect('/prod_page');
@@ -796,13 +796,129 @@ app.get('/prod_page/reset_in_out', isAuthenticated, async (req, res) => {
 });
 app.get('/prod_page/prod_output', isAuthenticated, async (req, res) => {
     try {
-        res.render('prod_output');
+        const errMsg = req.flash('error');
+
+        res.render('prod_output', {errMsg});
+
+    } catch (error) {
+        console.error('Error : ', error);
+        res.status(500).send('Internal Server Error');
+    }
+});
+app.get('/prod_page/prod_output/finished', isAuthenticated, async (req, res) => {
+    let connection;
+    try {
+        const prod_finished_code = req.query.prod_finished_code;
+        connection = await pool.getConnection();
+        if (prod_finished_code === '177765278830') {
+            console.log("Finished code successfully");
+
+            const qr_prod = req.query.qr_prod;
+            const date_out_prod = req.query.date_out_prod;
+            const time_out_prod = req.query.time_out_prod;
+            const ok = req.query.ok;
+            const operator = req.query.operator;
+            console.log(qr_prod, date_out_prod, time_out_prod, operator);
+
+            // Check qr_prod has in tb_dnth
+            const [results] = await connection.query(`
+                SELECT qr_prod, date_in_prod, time_in_prod FROM tb_dnth WHERE qr_prod = ?
+            `, [qr_prod]);
+            console.log(results[0].date_in_prod);
+
+            if (results.length > 0 && (results[0].date_in_prod > 0 || results[0].time_in_prod >0)) {
+                console.log(`This QR_PROD ${qr_prod} value exists in the tb_dnth and exist input process`);
+                await connection.query(`
+                    UPDATE tb_dnth SET date_out_prod = '${date_out_prod}',
+                    time_out_prod = '${time_out_prod}', operator = '${operator}', total_ok_prod = ${parseInt(ok)}
+                    WHERE qr_prod = '${qr_prod}'
+                `);
+
+                req.flash('error', `This QR_PROD ${qr_prod} value exists in the tb_dnth and exist input process`);
+
+                res.redirect('/prod_page');
+            } else {
+                console.log(`This QR_PROD ${qr_prod} value does not exist in the tb_dnth or don't exist input process`);
+                req.flash('error', `This QR_PROD ${qr_prod} value does not exist in the tb_dnth or does not exist input process`);
+
+                res.redirect('/prod_page');
+            }
+
+            
+        } else {
+            console.log("Wrong Prod Finished code !");
+            res.status(500).send('Wrong URL Prod Finished code');
+        }
 
     } catch (error) {
         console.error('Error : ', error);
         res.status(500).send('Internal Server Error');
     }
 })
+
+
+// ____________________________CREATE KANBAN OUT PAGE_______________________________________
+app.get('/create_kanban_out', isAuthenticated, async (req, res) => {
+    let connection;
+    try {
+        connection = await pool.getConnection();
+        
+        const [get_datas] = await connection.query(`
+            SELECT qr_prod, qr_kanban_out, kanban_out_date, kanban_out_time, total_ok_prod FROM tb_dnth
+            WHERE qr_kanban_out IS NOT NULL
+        `)
+        
+        res.render('create_kanban_out', {get_datas});
+
+    } catch (error) {
+        console.error('Error : ', error);
+        res.status(500).send('Internal Server Error');
+    }
+});
+app.post('/create_kanban_out/submit', async (req, res) => {
+    let connection;
+    try {
+        connection = await pool.getConnection();
+        const selectedFactory = req.body.factory;
+        const qr_prod = req.body.qr_prod;
+        const kanban_out_date = req.body.kanban_out_date;
+        const kanban_out_time = req.body.kanban_out_time;
+        console.log(selectedFactory, qr_prod, kanban_out_date, kanban_out_time);
+
+        // await connection.query(`
+        //     UPDATE tb_dnth SET 
+        // `)
+
+        const [qr_kanban_in_results] = await connection.query(`
+            SELECT qr_kanban_in FROM tb_dnth WHERE qr_prod = ?
+            AND date_out_prod IS NOT NULL AND time_out_prod IS NOT NULL
+        `, [qr_prod]);
+
+        console.log(qr_kanban_in_results.length);
+
+        for (let i = 0; i < qr_kanban_in_results.length; i++) {
+            console.log(qr_kanban_in_results[i].qr_kanban_in);
+
+            let counter = i + 1;
+            const uniqueText = `${selectedFactory}PO${counter.toString().padStart(4, '0')}`;
+
+            console.log(uniqueText);
+
+            // Update each row
+            await connection.query(`
+                UPDATE tb_dnth SET qr_kanban_out = ?, kanban_out_date = ?, kanban_out_time = ?
+                WHERE qr_prod = ? AND qr_kanban_in = ?
+            `, [uniqueText, kanban_out_date, kanban_out_time, qr_prod, qr_kanban_in_results[i].qr_kanban_in]);
+        }
+
+        res.redirect('/create_kanban_out');
+
+    } catch (error) {
+        console.error('Error : ', error);
+        res.status(500).send('Internal Server Error');
+    }
+})
+
 
 
 // ____________________________CREATE PACKING LIST PAGE_______________________________________
