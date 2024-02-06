@@ -93,6 +93,7 @@
       <table class="table">
         <thead>
           <tr>
+            <th>QR KANBAN IN</th>
             <th>QR PRODUCTION</th>
             <th>QR KANBAN OUT</th>
             <th>KANBAN OUT DATE</th>
@@ -105,6 +106,9 @@
             <% if (get_datas) { %>
                 <% get_datas.forEach((row) => { %>
                     <tr>
+                        <td>
+                            <input type="text" id="qr_kanban_in" name="qr_kanban_in" value="<%= row.qr_kanban_in %>" readonly>
+                        </td>
                         <td>
                             <input type="text" id="qr_prod" name="qr_prod" value="<%= row.qr_prod %>" readonly>
                         </td>

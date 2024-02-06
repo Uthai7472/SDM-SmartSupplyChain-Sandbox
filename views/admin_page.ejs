@@ -24,19 +24,20 @@
             <th>Level</th>
             <th>Actions</th>
         </tr>
-        <tr>
+        
             <% user_datas.forEach((user_data) => { %>
-                <td><%= user_data.id %></td>
-                <td><%= user_data.username %></td>
-                <td><%= user_data.email %></td>
-                <td><%= user_data.level %></td>
-                <td>
-                    <!-- <a class="btn btn-warning" href="/user/<%= user_data.id %>/edit?name=<%= user_data.username %>&email=<%= user_data.email %>">Edit</a> -->
-                    <a class="btn btn-warning" href="/admin_page/edit?id=<%= user_data.id %>&name=<%= user_data.username %>&email=<%= user_data.email %>&level=<%= user_data.level %>>Edit</a>
-                    <a class="btn btn-danger" href="/delete_user">Delete</a>
-                </td>
+                <tr>
+                    <td><%= user_data.id %></td>
+                    <td><%= user_data.username %></td>
+                    <td><%= user_data.email %></td>
+                    <td><%= user_data.level %></td>
+                    <td>
+                        <!-- <a class="btn btn-warning" href="/user/<%= user_data.id %>/edit?name=<%= user_data.username %>&email=<%= user_data.email %>">Edit</a> -->
+                        <a class="btn btn-warning" href="/admin_page/edit?id=<%= user_data.id %>&name=<%= user_data.username %>&email=<%= user_data.email %>&level=<%= user_data.level %>>Edit</a>
+                        <a class="btn btn-danger" href="/delete_user">Delete</a>
+                    </td>
+                </tr>
             <% }) %>
-        </tr>
     </table>
     
 </body>

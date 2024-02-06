@@ -29,13 +29,19 @@
             </thead>
             <tbody>
                 <% let count = 0; %>
-                <% qr_packingList.forEach((row) => { %>
+                <% if (qr_packingList && qr_packingList.length > 0) { %>
+                    <% qr_packingList.forEach((row) => { %>
                     <% count++; %>
-                <tr>
-                    <td><%= count %></td>
-                    <td><%= row.qr_packingList %></td>
-                </tr>
-                <% }) %>
+                    <tr>
+                        <td><%= count %></td>
+                        <td><%= row.qr_packingList %></td>
+                    </tr>
+                    <% }) %>
+                <% } else { %>
+                    <tr>
+                    <td colspan="2">No QR packing list available</td>
+                    </tr>
+                <% } %>
             </tbody>
         </table>
     </div>
