@@ -47,55 +47,52 @@
     </div>
 
     <div>
-      <h1>Production Output</h1>
+      <h1>Production Output Details</h1>
     </div>
     <hr />
 
-    <!-- <form action="#" method="post"> -->
-    <div class="mb-3">
-      <label for="qr_prod" name="qr_prod" class="">QR Production</label>
-      <input type="text" name="qr_prod" id="qr_prod" class="form-control" />
-    </div>
-    <div class="mb-3">
-      <label for="date_out_prod" name="date_out_prod" class=""
-        >Date Out Production</label
-      >
-      <input
-        type="text"
-        name="date_out_prod"
-        id="date_out_prod"
-        class="form-control"
-      />
-    </div>
-    <div class="mb-3">
-      <label for="time_out_prod" name="time_out_prod" class=""
-        >Time Out Production</label
-      >
-      <input
-        type="text"
-        name="time_out_prod"
-        id="time_out_prod"
-        class="form-control"
-      />
-    </div>
-
-    <div class="fill-operator" style="display: none">
-      <div class="mb-3">
-        <label for="ok" name="ok" class="">OK Qty.</label>
-        <input type="number" name="ok" id="ok" class="form-control" required/>
-        <label for="operator" name="operator" class="">Operator</label>
-        <input type="text" name="operator" id="operator" class="form-control" required/>
+    <form action="/prod_page/prod_output/finished" method="POST" onsubmit="return validateForm()">
+      <div class="fill-operator">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>QR KANBAN IN</th>
+              <th>QR PRODUCTION</th>
+              <th>PART NUMBER</th>
+              <th>QTY KANBAN IN</th>
+              <th>TOTAL OK QTY</th>
+              <th>OPERATOR</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% dnth_datas.forEach((row) => { %>
+              <tr>
+                <td>
+                  <input type="text" id="qr_kanban_in" name="qr_kanban_in" value="<%= row.qr_kanban_in %>" readonly>
+                </td>
+                <td>
+                  <input type="text" id="qr_prod" name="qr_prod" value="<%= row.qr_prod %>" readonly>
+                </td>
+                <td>
+                  <input type="text" id="partNumber" name="partNumber" value="<%= row.partNumber %>" readonly>
+                </td>
+                <td>
+                  <input type="number" id="qty_kanban_in" name="qty_kanban_in" value="<%= row.qty_kanban_in %>" readonly>
+                </td>
+                <td>
+                  <input type="number" id="total_ok_prod" name="total_ok_prod" placeholder="Please fill here">
+                  / <%= row.qty_kanban_in %>
+                </td>
+                <td>
+                  <input type="text" id="operator" name="operator" placeholder="Please fill here">
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+        <button type="submit" class="btn btn-primary">Submit Output</button>
       </div>
-      <div>
-        <a
-          href="#"
-          id="submit_output"
-          name="submit_output"
-          class="btn btn-primary"
-          >Submit Output</a
-        >
-      </div>
-    </div>
+    </form>
 
     <!-- </form> -->
 
@@ -105,61 +102,27 @@
       };
 
       <% if (errMsg.length > 0) { %>
-        alert('<%= errMsg[0] %>')
+        <div class="alert alert-danger">
+          <%= errMsg[0] %>
+        </div>
       <% } %>
+        
+      function validateForm() {
+        let totalOkProds = document.getElementsByName('total_ok_prod');
+        let qtyKanbanIns = document.getElementsByName('qty_kanban_in');
+        
+        for (let i = 0; i < totalOkProds.length; i++) {
+          let inputValue = parseInt(totalOkProds[i].value); // Parse the input value as an integer
+          let maxAllowedValue = parseInt(qtyKanbanIns[i].value); // Parse the max attribute value as an integer
 
-      document.addEventListener("keydown", function (event) {
-        if (event.key === "Enter") {
-          const operatorInput = document.getElementById("operator");
-          if (document.activeElement === operatorInput) {
-            event.preventDefault();
-            const qrProdVal = document.getElementById("qr_prod").value;
-            const dateOutProdVal =
-              document.getElementById("date_out_prod").value;
-            const timeOutProdVal =
-              document.getElementById("time_out_prod").value;
-              const qtyOkVal = document.getElementById("ok").value;
-            const operatorVal = document.getElementById("operator").value;
-            const submitOutputLink = document.getElementById("submit_output");
-            submitOutputLink.href = `/prod_page/prod_output/finished?prod_finished_code=177765278830&qr_prod=${qrProdVal}&date_out_prod=${dateOutProdVal}&time_out_prod=${timeOutProdVal}&ok=${qtyOkVal}&operator=${operatorVal}`;
-            submitOutputLink.click();
-          } else {
-            document.querySelector(".fill-operator").style.display = "block";
-            document.getElementById("operator").focus();
+          if (inputValue < 0 || inputValue > maxAllowedValue) {
+            alert('Total OK QTY cannot be negative or greater than the quantity of kanban in');
+            totalOkProds[i].focus();
+            return false; // Prevent form submission
           }
         }
-      });
-
-      document.getElementById("qr_prod").addEventListener("input", function () {
-        const qrProdValue = this.value;
-        const dateOutProdInput = document.getElementById("date_out_prod");
-        const timeOutProdInput = document.getElementById("time_out_prod");
-
-        if (qrProdValue.length >= 3) {
-          const currentDate = new Date();
-          const currentYear = currentDate.getFullYear();
-          const currentMonth = String(currentDate.getMonth() + 1).padStart(
-            2,
-            "0"
-          );
-          const currentDay = String(currentDate.getDate()).padStart(2, "0");
-          const currentHours = String(currentDate.getHours()).padStart(2, "0");
-          const currentMinutes = String(currentDate.getMinutes()).padStart(
-            2,
-            "0"
-          );
-          const currentSeconds = String(currentDate.getSeconds()).padStart(
-            2,
-            "0"
-          );
-
-          dateOutProdInput.value = `${currentYear}-${currentMonth}-${currentDay}`;
-          timeOutProdInput.value = `${currentHours}:${currentMinutes}:${currentSeconds}`;
-        } else {
-          dateOutProdInput.value = "";
-          timeOutProdInput.value = "";
-        }
-      });
+        return true; // Allow form submission
+      }
     </script>
   </body>
 </html>

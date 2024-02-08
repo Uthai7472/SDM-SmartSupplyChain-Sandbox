@@ -438,7 +438,7 @@ app.get('/admin_page/master_setting/delete', async (req, res) => {
 });
 app.get('/admin_page/master_setting/reset_dnth_receive', async (req, res) => {
     try {
-        await connection.query('UPDATE tb_master_packing SET is_fac1_receive = 0');
+        // await connection.query('UPDATE tb_master_packing SET is_fac1_receive = 0');
         await connection.query('UPDATE tb_master_packing SET is_fac1_receive = 0', (err, results) => {
             if (err) {
                 console.log(err);
@@ -545,13 +545,13 @@ app.post('/admin_page/receive_scan_master/receive_box_complete', async (req, res
                 return;
             } else {
                 // Check if the entry already exists in tb_dnth
-                connection.query('SELECT qr_kanban_in FROM tb_dnth WHERE qr_kanban_in = ?',[qr_box], (err, existingData) => {
+                connection.query('SELECT qr_kanban_in FROM tb_dnth WHERE qr_kanban_in = ? AND qr_pack_in = ?',[qr_box, qr_packingList], (err, existingData) => {
                     if (err) {
                         console.log(err);
                         return;
                     } else {
                         if (existingData.length === 0) {
-                            connection.query('SELECT partNumber, qty FROM tb_master_packing WHERE qr_box = ?', [qr_box], (err, get_datas) => {
+                            connection.query('SELECT partNumber, qty FROM tb_master_packing WHERE qr_box = ?  AND qr_packingList = ?', [qr_box, qr_packingList], (err, get_datas) => {
                                 if (err) {
                                     console.log(err);
                                     return;
@@ -869,7 +869,7 @@ app.get('/prod_page', isAuthenticated, async (req, res) => {
     try {
         const get_prod_datas = await new Promise((resolve, reject) => {
             connection.query(`
-                SELECT qr_pack_in, qr_kanban_in, qr_prod, date_in_prod, time_in_prod, date_out_prod, time_out_prod, total_ok_prod, operator
+                SELECT qr_pack_in, qr_kanban_in, qr_prod, date_in_prod, time_in_prod, date_out_prod, time_out_prod, total_ok_prod, operator, qty_kanban_in
                 FROM tb_dnth
             `, (err, results) => {
                 if (err) {
@@ -880,7 +880,9 @@ app.get('/prod_page', isAuthenticated, async (req, res) => {
                     resolve(results);
                 }
             })
-        })
+        });
+
+        console.log(get_prod_datas.length);
 
         res.render('prod_page', {get_prod_datas: get_prod_datas});
 
@@ -921,6 +923,11 @@ app.get('/prod_page/reset_in_out', isAuthenticated, async (req, res) => {
             console.log("Correct reset code");
             console.log(qr_pack_in);
 
+            tskKoCounter = 0;
+            dnthKoCounter = 0;
+            tttKoCounter = 0;
+            ntsKoCounter = 0;
+
             await connection.query(`
                 UPDATE tb_dnth SET date_in_prod = NULL, time_in_prod = NULL, date_out_prod = NULL, 
                 time_out_prod = NULL, operator = NULL, total_ok_prod = NULL
@@ -942,73 +949,111 @@ app.get('/prod_page/reset_in_out', isAuthenticated, async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 });
-app.get('/prod_page/prod_output', isAuthenticated, async (req, res) => {
+app.get('/prod_page/prod_scan_output', isAuthenticated, async (req, res) => {
     try {
-        const errMsg = req.flash('error');
-
-        res.render('prod_output', {errMsg});
+        res.render('prod_scan_output');
 
     } catch (error) {
         console.error('Error : ', error);
         res.status(500).send('Internal Server Error');
     }
-});
-app.get('/prod_page/prod_output/finished', isAuthenticated, async (req, res) => {
+})
+app.post('/prod_page/prod_scan_output/prod_output', isAuthenticated, async (req, res, next) => {
     try {
-        const prod_finished_code = req.query.prod_finished_code;
-        if (prod_finished_code === '177765278830') {
-            console.log("Finished code successfully");
+        const errMsg = req.flash('error');
+        const qr_prod = req.body.qr_prod;
+        const date_out_prod = req.body.date_out_prod;
+        const time_out_prod = req.body.time_out_prod;
 
-            const qr_prod = req.query.qr_prod;
-            const date_out_prod = req.query.date_out_prod;
-            const time_out_prod = req.query.time_out_prod;
-            const ok = req.query.ok;
-            const operator = req.query.operator;
-            console.log(qr_prod, date_out_prod, time_out_prod, operator);
-
-            // Check qr_prod has in tb_dnth
-            const existResults = await new Promise((resolve, reject) => {
-                connection.query(`
-                    SELECT qr_prod, date_in_prod, time_in_prod FROM tb_dnth WHERE qr_prod = ?
+        const dnth_datas = await new Promise((resolove, reject) => {
+            connection.query(`
+                    SELECT qr_kanban_in, qr_prod, qty_kanban_in, total_ok_prod, partNumber FROM tb_dnth WHERE qr_prod = ? AND date_in_prod IS NOT NULL
                 `, [qr_prod], (err, results) => {
-                    if (err) {
-                        console.log(err);
-                        return;
-                    } else {
-                        resolve(results);
-                    }
-                });
-            });
-            console.log(existResults[0].date_in_prod);
+                if (err) {
+                    reject(err);
+                } else {
+                    resolove(results);
+                }
+            })
+        });
+        const date_out_prods = await new Promise((resolove, reject) => {
+            connection.query(`
+                    SELECT date_out_prod FROM tb_dnth WHERE qr_prod = ?
+                `, [qr_prod], (err, results) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolove(results);
+                }
+            })
+        });
+        const allNull = date_out_prods.every((data) => data.date_out_prod === null);
+        if (!allNull) {
+            console.log("Already OUTPUT process");
+            req.flash('error', "Already OUTPUT process");
+            res.redirect('/prod_page');
+        } else {
+            console.log(dnth_datas.length);
 
-            if (existResults.length > 0 && (existResults[0].date_in_prod > 0 || existResults[0].time_in_prod > 0)) {
-                console.log(`This QR_PROD ${qr_prod} value exists in the tb_dnth and exist input process`);
+            if (dnth_datas.length > 0) {
                 await connection.query(`
-                    UPDATE tb_dnth SET date_out_prod = '${date_out_prod}',
-                    time_out_prod = '${time_out_prod}', operator = '${operator}', total_ok_prod = ${parseInt(ok)}
-                    WHERE qr_prod = '${qr_prod}'
-                `, (err, results) => {
+                    UPDATE tb_dnth SET date_out_prod = ?, time_out_prod = ? WHERE qr_prod = ?
+                `, [date_out_prod, time_out_prod, qr_prod], (err, results) => {
                     if (err) {
                         console.log(err);
                         return;
                     } else {
-                        console.log("UPDATE PRODUCTION OUTPUT SUCCESSFULLY");
+                        console.log("Update date/time output success");
                     }
                 });
-
-                req.flash('error', `This QR_PROD ${qr_prod} value exists in the tb_dnth and exist input process`);
-
-                res.redirect('/prod_page');
+    
+                res.render('prod_output', {errMsg, dnth_datas});
             } else {
-                console.log(`This QR_PROD ${qr_prod} value does not exist in the tb_dnth or don't exist input process`);
-                req.flash('error', `This QR_PROD ${qr_prod} value does not exist in the tb_dnth or does not exist input process`);
-
+                console.log('Not input process yet');
                 res.redirect('/prod_page');
             }
-        } else {
-            console.log("Wrong Prod Finished code !");
-            res.status(500).send('Wrong URL Prod Finished code');
         }
+    } catch (error) {
+        console.error('Error : ', error);
+        res.status(500).send('Internal Server Error');
+    }
+});
+app.post('/prod_page/prod_output/finished', async (req, res) => {
+    try {
+        const qr_prods = req.body.qr_prod;
+        const qr_kanban_ins = req.body.qr_kanban_in;
+        const totalOkProds = req.body.total_ok_prod;
+        const operators = req.body.operator;
+
+        console.log(totalOkProds, operators);
+            
+        const updatePromises = [];
+        for (let data_count = 0; data_count < totalOkProds.length; data_count++) {
+            const totalOkProd = totalOkProds[data_count];
+            const operator = operators[data_count];
+            const qr_prod = qr_prods[data_count];
+            const qr_kanban_in = qr_kanban_ins[data_count];
+
+            const updatePromise = await new Promise((resolve, reject) => {
+                connection.query(
+                  'UPDATE tb_dnth SET total_ok_prod = ?, operator = ? WHERE qr_prod = ? AND qr_kanban_in = ?',
+                  [totalOkProd, operator, qr_prod, qr_kanban_in],
+                  (err, results) => {
+                    if (err) {
+                      reject(err);
+                    } else {
+                      resolve(results);
+                    }
+                  }
+                );
+            });
+
+            updatePromises.push(updatePromise);
+            console.log(totalOkProd);
+            console.log('UPDATE OUTPUT DETAILS SUCCESSFULLY');        
+        }
+
+        res.redirect('/prod_page');
 
     } catch (error) {
         console.error('Error : ', error);
@@ -1032,7 +1077,8 @@ app.get('/create_kanban_out', isAuthenticated, async (req, res) => {
                     resolve(results);
                 }
             })
-        })
+        });
+        console.log("Get datas : ", get_datas);
         
         res.render('create_kanban_out', {get_datas});
 
@@ -1041,6 +1087,10 @@ app.get('/create_kanban_out', isAuthenticated, async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 });
+let tskKoCounter = 0;
+let dnthKoCounter = 0;
+let tttKoCounter = 0;
+let ntsKoCounter = 0;
 app.post('/create_kanban_out/submit', async (req, res) => {
     try {
         const selectedFactory = req.body.factory;
@@ -1055,40 +1105,56 @@ app.post('/create_kanban_out/submit', async (req, res) => {
                 AND date_out_prod IS NOT NULL AND time_out_prod IS NOT NULL
             `, [qr_prod], (err, results) => {
                 if (err) {
-                    console.log(err);
-                    return;
+                    reject(err);
                 } else {
                     resolve(results);
                 }
             })
-        })
+        });
 
         console.log(qr_kanban_in_results.length);
-
+            
+        const updatePromises = [];
         if (qr_kanban_in_results.length > 0) {
             for (let i = 0; i < qr_kanban_in_results.length; i++) {
                 console.log(qr_kanban_in_results[i].qr_kanban_in);
 
-                let counter = i + 1;
-                const uniqueText = `${selectedFactory}KO${counter.toString().padStart(4, '0')}`;
+                let uniqueText = '';
+
+                if (selectedFactory === 'TSK') {
+                    tskKoCounter++;
+                    uniqueText = `KO${selectedFactory}${tskKoCounter.toString().padStart(4, '0')}`;
+                } else if (selectedFactory === 'DNTH') {
+                    dnthKoCounter++;
+                    uniqueText = `KO${selectedFactory}${dnthKoCounter.toString().padStart(4, '0')}`;
+                } else if (selectedFactory === 'TTT') {
+                    tttKoCounter++;
+                    uniqueText = `KO${selectedFactory}${tttKoCounter.toString().padStart(4, '0')}`;
+                } else if (selectedFactory === 'NTS') {
+                    ntsKoCounter++;
+                    uniqueText = `KO${selectedFactory}${ntsKoCounter.toString().padStart(4, '0')}`;
+                }
 
                 console.log(uniqueText);
 
                 // Update each row
-                await connection.query(`
-                    UPDATE tb_dnth SET qr_kanban_out = ?, kanban_out_date = ?, kanban_out_time = ?
-                    WHERE qr_prod = ? AND qr_kanban_in = ?
-                `, [uniqueText, kanban_out_date, kanban_out_time, qr_prod, qr_kanban_in_results[i].qr_kanban_in], (err, results) => {
-                    if (err) {
-                        console.log(err);
-                        return;
-                    } else {
-                        res.redirect('/create_kanban_out');
-                    }
+                const updatePromise = await new Promise((resolve, reject) => {
+                    connection.query(`
+                        UPDATE tb_dnth SET qr_kanban_out = ?, kanban_out_date = ?, kanban_out_time = ?
+                        WHERE qr_prod = ? AND qr_kanban_in = ?
+                    `, [uniqueText, kanban_out_date, kanban_out_time, qr_prod, qr_kanban_in_results[i].qr_kanban_in], (err, updateResult) => {
+                        if (err) {
+                            reject(err);
+                        } else {
+                            resolve(updateResult);
+                        }
+                    });
                 });
+                updatePromises.push(updatePromise);
             }
+            res.redirect('/create_kanban_out');
         } else {
-            res.render('/prod_page');
+            res.redirect('/prod_page');
         }
     } catch (error) {
         console.error('Error : ', error);

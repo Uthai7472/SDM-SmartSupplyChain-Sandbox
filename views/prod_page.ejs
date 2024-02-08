@@ -1,191 +1,294 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+    />
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
-        .inventory-flow {
-            width: 100%;
-            height: 22vh;
-            display: flex;
-            justify-content: center;
-            position: relative;
-            /* border: 3px solid red; */
+      .inventory-flow {
+        width: 100%;
+        height: 22vh;
+        display: flex;
+        justify-content: center;
+        position: relative;
+        /* border: 3px solid red; */
+      }
+      .inventory-flow .text-in {
+        position: absolute;
+        /* border: 1px solid gray; */
+        /* display: flex; */
+        left: 26vw;
+        top: 12%;
+      }
+      @keyframes blink {
+        0% {
+          background-color: green;
+          border: 3px solid green;
         }
-        .inventory-flow .text-in {
-            position: absolute;
-            /* border: 1px solid gray; */
-            /* display: flex; */
-            left: 26vw;
-            top: 12%;
+        50% {
+          background-color: red;
+          border: 3px solid red;
         }
-        @keyframes blink {
-            0% {
-                background-color: green;
-            }
-            50% {
-                background-color: red;
-            }
-            100% {
-                background-color: green;
-            }
+        100% {
+          background-color: green;
+          border: 3px solid green;
         }
-        
-        .working-status {
-            width: 20px;
-            height: 20px;
-            border-radius: 10px 10px;
-            animation: blink 0.5s infinite;
-        }
-        .finished-status {
-            width: 20px;
-            height: 20px;
-            border-radius: 10px 10px;
-            background-color: green;
-        }
-    </style>
-</head>
-<body>
+      }
 
+      .working-status {
+        width: 20px;
+        height: 20px;
+        border-radius: 10px 10px;
+        animation: blink 0.5s infinite;
+      }
+      .finished-status {
+        width: 20px;
+        height: 20px;
+        border-radius: 10px 10px;
+        background-color: green;
+        border: 3px solid green;
+      }
+      .working {
+        background-color: green;
+        border: 3px solid red;
+      }
+    </style>
+  </head>
+  <body>
     <div class="header">
-        <a href="/admin_page">Home</a>
-        <a href="/admin_page/master_main">Master Main</a>
-        <a href="/admin_page/master_setting">Master Setting</a>
-        <a href="/admin_page/receive_scan_master">Receive Scan</a>
-        <a href="/dnth_data">DNTH Data</a>
-        <a href="/pc_page">PC Page</a>
-        <a href="/prod_page">PD Page</a>
-        <a href="/create_kanban_out">Create KB Out</a>
-        <a href="/logout">Logout</a>
+      <a href="/admin_page">Home</a>
+      <a href="/admin_page/master_main">Master Main</a>
+      <a href="/admin_page/master_setting">Master Setting</a>
+      <a href="/admin_page/receive_scan_master">Receive Scan</a>
+      <a href="/dnth_data">DNTH Data</a>
+      <a href="/pc_page">PC Page</a>
+      <a href="/prod_page">PD Page</a>
+      <a href="/create_kanban_out">Create KB Out</a>
+      <a href="/logout">Logout</a>
     </div>
 
     <!-- Inventory Flow -->
     <div class="inventory-flow">
-        <img src="/static/picture/Machine_IN.png" alt="">
-        <div class="text-in">
-        </div>
-
+      <img src="/static/picture/Machine_IN.png" alt="" />
+      <div class="text-in"></div>
     </div>
 
     <div>
-        <h1>Scan QR Production Input</h1>
+      <h1>Scan QR Production Input</h1>
     </div>
 
     <div>
-        <form action="/prod_page/inputing" method="POST">
-            <label for="qr_prod" class="form-control" name="qr_prod">QR Production</label>
-            <input type="text" id="qr_prod" class="v form-control mb-3" name="qr_prod">
-            <label for="date_in_prod" class="date_in_prod" name="date_in_prod">Production Date IN</label>
-            <input type="text" id="date_in_prod" class="date_in_prod form-control mb-3" name="date_in_prod" readonly>
-            <label for="time_in_prod" class="time_in_prod" name="time_in_prod">Production Time IN</label>
-            <input type="text" id="time_in_prod" class="time_in_prod form-control mb-3" name="time_in_prod" readonly>
-            <button type="submit" class="btn btn-primary">Submit</button>
-        </form>
+      <form action="/prod_page/inputing" method="POST">
+        <label for="qr_prod" class="form-control" name="qr_prod"
+          >QR Production</label
+        >
+        <input
+          type="text"
+          id="qr_prod"
+          class="v form-control mb-3"
+          name="qr_prod"
+        />
+        <label for="date_in_prod" class="date_in_prod" name="date_in_prod"
+          >Production Date IN</label
+        >
+        <input
+          type="text"
+          id="date_in_prod"
+          class="date_in_prod form-control mb-3"
+          name="date_in_prod"
+          readonly
+        />
+        <label for="time_in_prod" class="time_in_prod" name="time_in_prod"
+          >Production Time IN</label
+        >
+        <input
+          type="text"
+          id="time_in_prod"
+          class="time_in_prod form-control mb-3"
+          name="time_in_prod"
+          readonly
+        />
+        <button type="submit" class="btn btn-primary">Submit</button>
+      </form>
     </div>
-    <hr>
+    <hr />
 
     <h2>Production Detail Table</h2>
     <div>
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>QR BOX</th>
-                    <th>QR PRODUCTION</th>
-                    <th>DATE IN PD</th>
-                    <th>TIME IN PD</th>
-                    <th>DATE OUT PD</th>
-                    <th>TIME OUT PD</th>
-                    <th>TOTAL OK QTY</th>
-                    <th>OPERATOR</th>
-                    <th>STATUS</th>
-                    <!-- <th>QR PRODUCTION</th> -->
-                </tr>
-            </thead>
-            <tbody>
-                <% get_prod_datas.forEach((row) => { %> 
-                    <tr>
-                        <td>
-                            <input type="text" id="qr_kanban_in" name="qr_kanban_in[]" value="<%= row.qr_kanban_in %>" readonly>
-                        </td>
-                        <td>
-                            <input type="text" id="qr_prod" name="qr_prod[]" value="<%= row.qr_prod %>" readonly>
-                        </td>
-                        <td>
-                            <input type="text" id="date_in_prod" name="date_in_prod[]" value="<%= row.date_in_prod ? row.date_in_prod.toLocaleDateString('en-GB') : '' %>" readonly>
-                        </td>
-                        <td>
-                            <input type="text" id="time_in_prod" name="time_in_prod[]" value="<%= row.time_in_prod %>" readonly>
-                        </td>
-                        <td>
-                            <input type="text" id="date_out_prod" name="date_out_prod[]" value="<%= row.date_out_prod ? row.date_out_prod.toLocaleDateString('en-GB') : '' %>" readonly>
-                        </td>
-                        <td>
-                            <input type="text" id="time_out_prod" name="time_out_prod[]" value="<%= row.time_out_prod %>" readonly>
-                        </td>
-                        <td>
-                            <input type="text" id="total_ok_prod" name="total_ok_prod[]" value="<%= row.total_ok_prod %>" readonly>
-                        </td>
-                        <td>
-                            <input type="text" id="operator" name="operator[]" value="<%= row.operator %>" readonly>
-                        </td>
-                        <td>
-                            <% if (row.date_in_prod && !row.date_out_prod) { %>
-                              <div class="working-status"></div>
-                            <% } else { %>
-                              <!-- Show nothing if date_in_prod is null -->
-                            <% } %>
-                            <% if (row.date_in_prod && row.date_out_prod) { %>
-                                <div class="finished-status"></div>
-                            <% } else { %>
-                                <!-- Show nothing if date_in_prod is null -->
-                            <% } %>
-                        </td>
-                        <td></td>
-                    </tr>
-                <% }) %>
-            </tbody>
-        </table>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>QR BOX</th>
+            <th>QR PRODUCTION</th>
+            <th>DATE IN PD</th>
+            <th>TIME IN PD</th>
+            <th>DATE OUT PD</th>
+            <th>TIME OUT PD</th>
+            <th>TOTAL OK QTY</th>
+            <th>TOTAL NG QTY</th>
+            <th>OPERATOR</th>
+            <th>STATUS</th>
+            <!-- <th>QR PRODUCTION</th> -->
+          </tr>
+        </thead>
+        <tbody>
+          <% if (get_prod_datas.length > 0) { %> 
+            <% get_prod_datas.forEach((row) => { %>
+          <tr class="<%= (row.date_in_prod && !row.date_out_prod) ? 'working-status' : 
+          (row.date_in_prod && row.date_out_prod) ? 'finished-status' : '' %>">
+            <td>
+              <input
+                type="text"
+                id="qr_kanban_in"
+                name="qr_kanban_in[]"
+                value="<%= row.qr_kanban_in %>"
+                readonly
+              />
+            </td>
+            <td>
+              <input
+                type="text"
+                id="qr_prod"
+                name="qr_prod[]"
+                value="<%= row.qr_prod %>"
+                readonly
+              />
+            </td>
+            <td>
+              <input
+                type="text"
+                id="date_in_prod"
+                name="date_in_prod[]"
+                value="<%= row.date_in_prod ? row.date_in_prod.toLocaleDateString('en-GB') : '' %>"
+                readonly
+              />
+            </td>
+            <td>
+              <input
+                type="text"
+                id="time_in_prod"
+                name="time_in_prod[]"
+                value="<%= row.time_in_prod %>"
+                readonly
+              />
+            </td>
+            <td>
+              <input
+                type="text"
+                id="date_out_prod"
+                name="date_out_prod[]"
+                value="<%= row.date_out_prod ? row.date_out_prod.toLocaleDateString('en-GB') : '' %>"
+                readonly
+              />
+            </td>
+            <td>
+              <input
+                type="text"
+                id="time_out_prod"
+                name="time_out_prod[]"
+                value="<%= row.time_out_prod %>"
+                readonly
+              />
+            </td>
+            <td>
+              <input
+                type="text"
+                id="total_ok_prod"
+                name="total_ok_prod[]"
+                value="<%= row.total_ok_prod ? row.total_ok_prod : 0 %>/<%= row.qty_kanban_in %>"
+                readonly
+              />
+            </td>
+            <td>
+              <input
+                type="text"
+                id="total_ng_prod"
+                name="total_ng_prod[]"
+                value="<%= row.date_out_prod ? row.qty_kanban_in - row.total_ok_prod : 0 %>"
+                readonly
+              />
+            </td>
+            <td>
+              <input
+                type="text"
+                id="operator"
+                name="operator[]"
+                value="<%= row.operator %>"
+                readonly
+              />
+            </td>
+            <td>
+              <% if (row.date_in_prod && !row.date_out_prod) { %>
+              <div class="working-status"></div>
+              <% } else { %>
+              <!-- Show nothing if date_in_prod is null -->
+              <% } %> <% if (row.date_in_prod && row.date_out_prod) { %>
+              <div class="finished-status"></div>
+              <% } else { %>
+              <!-- Show nothing if date_in_prod is null -->
+              <% } %>
+            </td>
+            <td></td>
+          </tr>
+          <% }) %> <% } else { %> <% } %>
+        </tbody>
+      </table>
     </div>
     <div>
-        <a href="/prod_page/prod_output" class="btn btn-success">Output</a>
-        <a href="/prod_page/reset_in_out?reset_code=177765278830&qr_pack_in=<%= get_prod_datas[0].qr_pack_in %>" class="btn btn-danger">Reset IN/OUT Time</a>
+      <a href="/prod_page/prod_scan_output" class="btn btn-success">Output</a>
+      <% if (get_prod_datas.length > 0) { %>
+      <a
+        href="/prod_page/reset_in_out?reset_code=177765278830&qr_pack_in=<%= get_prod_datas[0].qr_pack_in %>"
+        class="btn btn-danger"
+        >Reset IN/OUT Time</a
+      >
+      <% } else {%> <% } %>
     </div>
-    
 
     <script>
-        window.onload = function() {
-            document.getElementById("qr_prod").focus();
-        };
+      window.onload = function () {
+        document.getElementById("qr_prod").focus();
+      };
 
-        // function changeURL() {
-        //     window.location.href = "/prod_page";
-        // }
+      // function changeURL() {
+      //     window.location.href = "/prod_page";
+      // }
 
-        document.getElementById('qr_prod').addEventListener('input', function () {
-            const qrProdValue = this.value;
-            const dateInProdInput = document.getElementById('date_in_prod');
-            const timeInProdInput = document.getElementById('time_in_prod');
+      document.getElementById("qr_prod").addEventListener("input", function () {
+        const qrProdValue = this.value;
+        const dateInProdInput = document.getElementById("date_in_prod");
+        const timeInProdInput = document.getElementById("time_in_prod");
 
-            if (qrProdValue.length >= 3) {
-                const currentDate = new Date();
-                const currentYear = currentDate.getFullYear();
-                const currentMonth = String(currentDate.getMonth() + 1).padStart(2, '0');
-                const currentDay = String(currentDate.getDate()).padStart(2, '0');
-                const currentHours = String(currentDate.getHours()).padStart(2, '0');
-                const currentMinutes = String(currentDate.getMinutes()).padStart(2, '0');
-                const currentSeconds = String(currentDate.getSeconds()).padStart(2, '0');
+        if (qrProdValue.length >= 3) {
+          const currentDate = new Date();
+          const currentYear = currentDate.getFullYear();
+          const currentMonth = String(currentDate.getMonth() + 1).padStart(
+            2,
+            "0"
+          );
+          const currentDay = String(currentDate.getDate()).padStart(2, "0");
+          const currentHours = String(currentDate.getHours()).padStart(2, "0");
+          const currentMinutes = String(currentDate.getMinutes()).padStart(
+            2,
+            "0"
+          );
+          const currentSeconds = String(currentDate.getSeconds()).padStart(
+            2,
+            "0"
+          );
 
-                dateInProdInput.value = `${currentYear}-${currentMonth}-${currentDay}`;
-                timeInProdInput.value = `${currentHours}:${currentMinutes}:${currentSeconds}`;
-            } else {
-                dateInProdInput.value = '';
-                timeInProdInput.value = '';
-            }
-        });
+          dateInProdInput.value = `${currentYear}-${currentMonth}-${currentDay}`;
+          timeInProdInput.value = `${currentHours}:${currentMinutes}:${currentSeconds}`;
+        } else {
+          dateInProdInput.value = "";
+          timeInProdInput.value = "";
+        }
+      });
     </script>
-    
-</body>
+  </body>
 </html>
