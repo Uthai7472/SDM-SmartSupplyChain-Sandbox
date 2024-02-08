@@ -178,37 +178,8 @@ app.get('/', async (req, res) => {
 // Login end point
 app.post('/login', async (req, res) => {
     try {
-        // const connection = await pool.getConnection();
         const {username, password} = req.body;
-        // Check login
-        // const [user] = await connection.query(`SELECT * FROM tb_user_e_supp WHERE username = ?
-        //     AND password = ?`, [username, password]);
-        // await connection.query(`
-            // SELECT * FROM tb_user_e_supp WHERE username = ?
-            // AND password = ?
-        // `, [username, password], (err, results) => {
-        //     if (err) {
-        //         console.log(err);
-        //         return;
-        //     } else {
-        //         users = results;
-        //         console.log("Users in loop : ", results);
-        //     }
-        // });
-        // console.log("Users : ", users);
-        // connection.release();
 
-        // const [user_datas] = await connection.query('SELECT username, email, level FROM tb_user_e_supp');
-        // await connection.query(`
-        //     SELECT username, email, level FROM tb_user_e_supp
-        // `, (err, results) => {
-        //     if (err) {
-        //         console.log(err);
-        //         return;
-        //     } else {
-        //         users = results;
-        //     }
-        // });
         const user_datas = await new Promise((resolve, reject) => {
             connection.query(`
                 SELECT * FROM tb_user_e_supp WHERE username = ?
@@ -230,11 +201,14 @@ app.post('/login', async (req, res) => {
             res.cookie('isAuthenticated', true);
             console.log("User level : ", user_datas[0].level);
             if (user_datas[0].level === 0) {
-                console.log('Welcome admin');
+                console.log(`Welcome ${user_datas[0].username}`);
+
+                req.session.username = user_datas[0].username;
                 res.redirect('/admin_page');
             }
             else {
-                console.log('Welcome user');
+                req.session.username = user_datas[0].username;
+                console.log(`Welcome ${user_datas[0].username}`);
                 res.redirect('/admin_page');
             }
         }
@@ -251,10 +225,8 @@ app.post('/login', async (req, res) => {
 // Master setting shoow main QR
 app.get('/admin_page/master_main', isAuthenticated, async (req, res) => {
     try{
-        // const connection = await pool.getConnection();
-        // const [qr_packingList] = await connection.execute(`
-        //     SELECT DISTINCT qr_packingList FROM tb_master_packing    
-        // `);
+        const current_user = req.session.username;
+        console.log(current_user);
         await connection.query('SELECT DISTINCT qr_packingList FROM tb_master_packing', 
         (err, results) => {
             if (err) {
@@ -267,9 +239,6 @@ app.get('/admin_page/master_main', isAuthenticated, async (req, res) => {
                 res.render('master_main', {qr_packingList: results});
             }
         })
-        // console.log('QR packing list : ', qr_packingList);
-
-        // res.render('master_main', {qr_packingList: qr_packingList});
     }
     catch (error) {
         console.error('Error : ', error);
@@ -1454,3 +1423,4 @@ app.get('/logout', (req, res) => {
     
     res.redirect('/');
 });
+
