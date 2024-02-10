@@ -1,0 +1,37 @@
+<!-- <div>
+    <button type="button" class="btn btn-secondary ml-3" id="see_detail">See more detail</button>
+</div> -->
+
+<div class="detail" id="detail" style="display: none;">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>QR PD</th>
+                <th>QR KANBAN IN</th>
+                <th>MACHINE LINE</th>
+                <th>DATE IN PROD</th>
+                <th>TIME IN PROD</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% datas.forEach((data) => { %>
+                <tr class="<%= (!data.date_out_prod && data.date_in_prod) ? 'working-status' : ''; %>">
+                    <% const statusClass = data.date_out_prod === '' ? 'working-status' : 'finished-status'; %>
+                    <td><%= data.qr_prod %></td>
+                    <td><%= data.qr_kanban_in %></td>
+                    <td><%= data.machine_line %></td>
+                    <td><%= data.date_in_prod.toLocaleDateString('en-GB') %></td>
+                    <td><%= data.time_in_prod %></td>
+                </tr>
+            <% }) %>
+        </tbody>
+    </table>
+</div>
+
+<!-- <script>
+    $(document).ready(function() {
+        $('#see_detail').click(function() {
+            $('.detail').toggle();
+        });
+      });
+</script> -->

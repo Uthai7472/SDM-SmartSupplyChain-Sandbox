@@ -7,20 +7,46 @@
       background-color: rgb(168, 4, 4);
       margin-bottom: 5vh;
     }
-    a {
+    .home {
         padding: 20px 25px;
         /* border: 3px solid red; */
         text-decoration: none;
-        color: rgb(255, 255, 255);
-        font-size: 20px;
+        color: rgb(233, 210, 210);
+        font-size: 15px;
         font-weight: bold;
         border-radius: 10px;
     }
-    a:hover {
+    .home:hover {
         background-color: rgb(243, 111, 111);
         transform: translateY(-5px);
         text-shadow: 2px 2px 4px rgba(11, 12, 11, 0.5);
     }
+
+    .topic {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .dropdown-content {
+        display: grid;
+        position: absolute;
+        background-color: #f9f9f9;
+        min-width: 160px;
+        height: 100px;
+        box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+        padding: 12px 16px;
+        z-index: 1;
+    }
+
+        .dropdown:hover .dropdown-content {
+        display: block;
+    }
+
+    .dropdown-item {
+        margin: 10px 0 10px 0;
+    }
+
 
     /* .dropdown {
     position: relative;
@@ -47,17 +73,42 @@
     </style>
 
 <div class="header">
-    <a class="home" href="/admin_page">Home</a>
-    <a class="home" href="/admin_page/master_main">Master Main</a>
-    <a class="home" href="/admin_page/master_setting">Master Setting</a>
-    <a class="home" href="/admin_page/receive_scan_master">Receive Scan</a>
-    <a class="home" href="/dnth_data">DNTH Data</a>
-    <a class="home" href="/pc_page">PC Page</a>
-    <a class="home" href="/prod_page">PD Page</a>
-    <a class="home" href="/create_kanban_out">Create KB Out</a>
-    <a class="home" href="/create_pl">Create PL</a>
+    <a class="home" target="_blank" href="/admin_page">Home</a>
+    <a class="home" target="_blank" href="/admin_page/master_main">Master Main</a>
+    <a class="home" target="_blank" href="/admin_page/master_setting">Master Setting</a>
+    <a class="home" target="_blank" href="/admin_page/receive_scan_master">Receive Scan</a>
+    <a class="home" target="_blank" href="/dnth_data">DNTH Data</a>
+    <a class="home" target="_blank" href="/pc_page">PC Page</a>
+    <!-- <a class="home" target="_blank" href="/prod_page">PD Page</a> -->
+    <a class="home" target="_blank" href="/prod_in_new">PD IN</a>
+    <a class="home" target="_blank" href="/prod_out_new">PD OUT</a>
+    <!-- <div class="dropdown">
+        <button class="home">PD</button>
+        <div class="dropdown-content">
+            <a class="drop-item" target="_blank" href="/prod_in_new">PD IN</a>
+            <a class="drop-item" target="_blank" href="/prod_out_new">PD OUT</a>
+        </div>
+    </div> -->
+    <a class="home" target="_blank" href="/create_kanban_out">Create KB Out</a>
+    <a class="home" target="_blank" href="/create_pl">Create PL</a>
     <a class="home" href="/logout">Logout</a>
 </div>
+
+<script>
+    function changeTitleName(title) {
+        document.title = title;
+    }
+
+    // Get the dropdown button and content elements
+    const dropdownButton = document.querySelector('.dropdown button');
+    const dropdownContent = document.querySelector('.dropdown-content');
+
+    // Add a click event listener to the dropdown button
+    dropdownButton.addEventListener('click', function() {
+    // Toggle the visibility of the dropdown content
+    dropdownContent.classList.toggle('show');
+    });
+</script>
 
 <!-- <div class="dropdown">
     <button class="dropbtn">Dropdown</button>

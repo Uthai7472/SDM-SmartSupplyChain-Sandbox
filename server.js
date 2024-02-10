@@ -7,8 +7,9 @@ const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const flash = require('express-flash');
 const path = require('path');
-const { error } = require('console');
+const { error, table } = require('console');
 const { resolve } = require('dns');
+const { rejects } = require('assert');
 
 const port = 5672;
 
@@ -30,13 +31,25 @@ const server = app.listen(port, '0.0.0.0', () => {
     console.log(`Server is running on port ${port}`);
 })
 
-const connection = mysql.createConnection({
+const connection = mysql.createPool({
     host: process.env.MYSQL_HOSTNAME,
     port: process.env.MYSQL_PORT,
     user: process.env.MYSQL_USERNAME,
     password: process.env.MYSQL_PASSWORD,
     database: process.env.MYSQL_DB,  
 });
+
+
+
+// connection.connect((error) => {
+//     if (error) {
+//       console.error('Error connecting to the database:', error);
+//       // Handle the error
+//     } else {
+//       console.log('Connected to the database!');
+//       // Perform database operations
+//     }
+//   });
 
 const sessionMiddleware = session({
     secret: 'SessionSecretKey',
@@ -62,76 +75,103 @@ app.get('/', async (req, res) => {
         // const connection = await pool.getConnection();
 
         // Level => 0 = admin / 1 = SDM / 2 = supplier
-        await connection.query(`
-            CREATE TABLE IF NOT EXISTS tb_user_e_supp (id INT PRIMARY KEY AUTO_INCREMENT,
-            username VARCHAR(255) NOT NULL, password VARCHAR(255) NOT NULL, email VARCHAR(255) NOT NULL, 
-            status INT DEFAULT 1, level INT DEFAULT 1)
-        `);
+        // await connection.query(`
+        //     CREATE TABLE IF NOT EXISTS tb_user_e_supp (id INT PRIMARY KEY AUTO_INCREMENT,
+        //     username VARCHAR(255) NOT NULL, password VARCHAR(255) NOT NULL, email VARCHAR(255) NOT NULL, 
+        //     status INT DEFAULT 1, level INT DEFAULT 1)
+        // `);
         // await connection.query('DROP TABLE tb_user_e_supp');
         // await connection.query(`INSERT INTO tb_user_e_supp (username, password, email, level)
         // VALUES ('admin', 'admin', 'uthai.khantamongkhon.a7p@ap.denso.com', 0)`);
         // connection.release();
-        await connection.query(`
-            CREATE TABLE IF NOT EXISTS tb_master_packing (id INT,
-            qr_packingList VARCHAR(255), partNumber VARCHAR(255), partName VARCHAR(1080), 
-            qr_box VARCHAR(255) PRIMARY KEY, qty INT, boxCount INT, is_fac1_receive BIT(1), suppStartDate DATE, suppStartTime TIME, suppEndDate DATE, suppEndTime TIME, 
-            suppLeader VARCHAR(255))
-        `);
+        // await connection.query(`
+        //     CREATE TABLE IF NOT EXISTS tb_master_packing (id INT,
+        //     qr_packingList VARCHAR(255), partNumber VARCHAR(255), partName VARCHAR(1080), 
+        //     qr_box VARCHAR(255) PRIMARY KEY, qty INT, boxCount INT, is_fac1_receive BIT(1), suppStartDate DATE, suppStartTime TIME, suppEndDate DATE, suppEndTime TIME, 
+        //     suppLeader VARCHAR(255))
+        // `);
         // connection.release();
         // await connection.query(`ALTER TABLE tb_master_packing MODIFY id INT NOT NULL AUTO_INCREMENT, DROP PRIMARY KEY, ADD PRIMARY KEY (qr_box)`);
         // connection.release();
+        // await connection.query(`
+        //     CREATE TABLE IF NOT EXISTS tb_actual_packing (id INT PRIMARY KEY AUTO_INCREMENT,
+        //     qr_packingList VARCHAR(255), partNumber VARCHAR(255), partName VARCHAR(1080), 
+        //     qr_box VARCHAR(255), qty INT, boxCount INT)
+        // `);
+        // // connection.release();
+        // await connection.query(`
+        // CREATE TABLE IF NOT EXISTS tb_dnth (
+        //     qr_pack_in VARCHAR(255),
+        //     qr_kanban_in VARCHAR(255) PRIMARY KEY,
+        //     kanban_date_in DATE,
+        //     kanban_time_in TIME,
+        //     qty_kanban_in INT,
+        //     partNumber VARCHAR(255),
+        //     qr_prod VARCHAR(255),
+        //     date_in_prod DATE,
+        //     time_in_prod TIME,
+        //     date_out_prod DATE,
+        //     time_out_prod TIME,
+        //     total_ok_prod INT,
+        //     total_ng_prod INT,
+        //     operator VARCHAR(255),
+        //     qr_kanban_out VARCHAR(255),
+        //     kanban_out_date DATE,
+        //     kanban_out_time TIME,
+        //     total_qty_out INT,
+        //     qr_pack_out VARCHAR(255)
+        //   )
+        // `);
+        // await connection.query(`
+        // CREATE TABLE IF NOT EXISTS tb_tsk (
+        //     qr_pack_in VARCHAR(255),
+        //     qr_kanban_in VARCHAR(255) PRIMARY KEY,
+        //     kanban_date_in DATE,
+        //     kanban_time_in TIME,
+        //     qty_kanban_in INT,
+        //     partNumber VARCHAR(255),
+        //     qr_prod VARCHAR(255),
+        //     date_in_prod DATE,
+        //     time_in_prod TIME,
+        //     date_out_prod DATE,
+        //     time_out_prod TIME,
+        //     total_ok_prod INT,
+        //     total_ng_prod INT,
+        //     operator VARCHAR(255),
+        //     qr_kanban_out VARCHAR(255),
+        //     kanban_out_date DATE,
+        //     kanban_out_time TIME,
+        //     total_qty_out INT,
+        //     qr_pack_out VARCHAR(255)
+        //   )
+        // `);
         await connection.query(`
-            CREATE TABLE IF NOT EXISTS tb_actual_packing (id INT PRIMARY KEY AUTO_INCREMENT,
-            qr_packingList VARCHAR(255), partNumber VARCHAR(255), partName VARCHAR(1080), 
-            qr_box VARCHAR(255), qty INT, boxCount INT)
-        `);
-        // connection.release();
-        await connection.query(`
-        CREATE TABLE IF NOT EXISTS tb_dnth (
-            qr_pack_in VARCHAR(255),
-            qr_kanban_in VARCHAR(255) PRIMARY KEY,
-            kanban_date_in DATE,
-            kanban_time_in TIME,
-            qty_kanban_in INT,
-            partNumber VARCHAR(255),
-            qr_prod VARCHAR(255),
-            date_in_prod DATE,
-            time_in_prod TIME,
-            date_out_prod DATE,
-            time_out_prod TIME,
-            total_ok_prod INT,
-            total_ng_prod INT,
-            operator VARCHAR(255),
-            qr_kanban_out VARCHAR(255),
-            kanban_out_date DATE,
-            kanban_out_time TIME,
-            total_qty_out INT,
-            qr_pack_out VARCHAR(255)
+        CREATE TABLE IF NOT EXISTS tb_partNumber (
+            tsk_pn VARCHAR(15),
+            dnth_pn VARCHAR(15),
+            ttt_pn VARCHAR(15),
+            nts_pn VARCHAR(15),
+            sdm_pn VARCHAR(15)
           )
-        `);
-        await connection.query(`
-        CREATE TABLE IF NOT EXISTS tb_tsk (
-            qr_pack_in VARCHAR(255),
-            qr_kanban_in VARCHAR(255) PRIMARY KEY,
-            kanban_date_in DATE,
-            kanban_time_in TIME,
-            qty_kanban_in INT,
-            partNumber VARCHAR(255),
-            qr_prod VARCHAR(255),
-            date_in_prod DATE,
-            time_in_prod TIME,
-            date_out_prod DATE,
-            time_out_prod TIME,
-            total_ok_prod INT,
-            total_ng_prod INT,
-            operator VARCHAR(255),
-            qr_kanban_out VARCHAR(255),
-            kanban_out_date DATE,
-            kanban_out_time TIME,
-            total_qty_out INT,
-            qr_pack_out VARCHAR(255)
-          )
-        `);
+        `, (err, results) => {
+            if(err) {
+                console.log(err);
+            } else {
+                console.log("CREATE tb_partNumber completed");
+            }
+        });
+        // await connection.query(`
+        //     ALTER TABLE tb_partNumber ADD id INT PRIMARY KEY AUTO_INCREMENT
+        // `, (err, results) => {
+        //     if(err) {
+        //         console.log(err);
+        //     } else {
+        //         console.log("Add column in tb_partNumber completed");
+        //     }
+        // });
+        // await connection.query(`
+        //     ALTER TABLE tb_dnth ADD machine_line INT 
+        // `);
         // connection.release();
         // await connection.query('ALTER TABLE tb_master_packing ADD COLUMN fac1_receive BOOLEAN DEFAULT FALSE');
         // connection.release();
@@ -152,16 +192,16 @@ app.get('/', async (req, res) => {
         // For debug user
         // const [user_datas] = connection.query('SELECT * FROM tb_user_e_supp');
         // let user_datas;
-        await connection.query("SELECT * FROM tb_user_e_supp", (err, results) => {
-            if (err) {
-                console.log(err);
-                return;
-            } else {
-                results.forEach((user_data) => {
-                    console.log(user_data.username + " " + user_data.password + " " + user_data.email);
-                });
-            }
-        })
+        // const await connection.query("SELECT * FROM tb_user_e_supp", (err, results) => {
+        //     if (err) {
+        //         console.log(err);
+        //         return;
+        //     } else {
+        //         results.forEach((user_data) => {
+        //             console.log(user_data.username + " " + user_data.password + " " + user_data.email);
+        //         });
+        //     }
+        // })
         // console.log(user_datas);
         // // connection.release();
         // user_datas.forEach((user_data) => {
@@ -1029,6 +1069,215 @@ app.post('/prod_page/prod_output/finished', async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 })
+// ____________________________PD IN PAGE________________________________________________
+app.get('/prod_in_new', isAuthenticated, async (req, res) => {
+    try {
+        let response = req.query.response;
+
+        const datas = await new Promise((resolve, reject) => {
+            connection.query(`
+                SELECT * FROM tb_dnth WHERE date_in_prod IS NOT NULL AND machine_line IS NOT NULL
+            `, (err, results) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(results);
+                }
+            })
+        });
+
+        console.log("Response : ", response);
+
+        res.render('prod_in_new', {response, datas});
+
+    } catch (error) {
+        console.error('Error : ', error);
+        res.status(500).send('Internal Server Error');
+    }
+});
+// Handle the POST request for updating the MySQL database
+app.post("/prod_in_new/update", async (req, res) => {
+    try {
+        const qr_kanban_in = req.body.qr_kanban_in;
+        const machine_line = parseInt(req.body.machine_line);
+        const date_in_prod = req.body.date_in_prod;
+        const time_in_prod = req.body.time_in_prod;
+        let response = "";
+
+        console.log("Machine Line : ", machine_line);
+        console.log("Date In Prod : ", date_in_prod);
+        console.log("Time In Prod : ", time_in_prod);
+
+        const isKanbanIn = await new Promise((resolve, reject) => {
+            connection.query('SELECT * FROM tb_dnth WHERE qr_kanban_in = ? AND date_out_prod IS NULL AND date_in_prod IS NULL', [qr_kanban_in],
+            (err, results) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(results.length > 0);
+                }
+            })
+        });
+        console.log(isKanbanIn);
+
+        if (!isKanbanIn) {
+            console.log(`No ${qr_kanban_in} data`);
+            response = "0";
+            res.redirect(`/prod_in_new?response=${response}`);
+        } else {
+            await connection.query(`
+                UPDATE tb_dnth SET machine_line = ?, date_in_prod = ?, time_in_prod = ?
+                WHERE qr_kanban_in = ? AND date_out_prod IS NULL
+            `, [machine_line, date_in_prod, time_in_prod, qr_kanban_in], (err, results) => {
+                if (err) {
+                    console.log(err);
+                    return;
+                } else {
+                    console.log("Update Production IN details successfully");
+                    response = "1";
+                    res.redirect(`/prod_in_new?response=${response}`)
+                    }
+                })
+        }
+
+    } catch (error) {
+        console.error('Error : ', error);
+        res.status(500).send('Internal Server Error');
+    }
+});
+
+
+// ____________________________PD OUT PAGE________________________________________________
+app.get('/prod_out_new', isAuthenticated, async (req, res) => {
+    try {
+        const qr_kanban_in = req.query.qr_kanban_in;
+        let response = req.query.response;
+
+        // Get all data tb_dnth
+        const pd_dnth_datas = await new Promise((resolve, reject) => {
+            connection.query(`
+                SELECT * FROM tb_dnth WHERE date_out_prod IS NOT NULL AND date_in_prod IS NOT NULL
+            `, (err, results) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(results);
+                }
+            })
+        });
+
+        console.log("Response : ", response);
+        res.render('prod_out_new', {response, pd_dnth_datas});
+
+    } catch (error) {
+        console.error('Error : ', error);
+        res.status(500).send('Internal Server Error');
+    }
+});
+app.get('/prod_out_new/reset_in_out', isAuthenticated, async (req, res) => {
+    try {
+        await connection.query(`
+            UPDATE tb_dnth SET machine_line = NULL, date_in_prod = NULL,
+            time_in_prod = NULL, date_out_prod = NULL, time_out_prod = NULL,
+            operator = NULL, total_ok_prod = NULL, total_ng_prod = NULL
+            WHERE date_in_prod IS NOT NULL
+        `, (err, results) => {
+            if (err) {
+                console.log(err);
+                res.redirect('/prod_out_new');
+            } else {
+                console.log("Reset IN/OUT successfully");
+                res.redirect('/prod_out_new');
+            }
+        });
+
+    } catch (error) {
+        console.error('Error : ', error);
+        res.status(500).send('Internal Server Error');
+    }
+})
+app.post('/prod_out_new/update', async (req, res) => {
+    try {
+        const operator = req.body.operator;
+        const total_ok_prod = parseInt(req.body.total_ok_prod);
+        const qr_kanban_in = req.body.qr_kanban_in;
+        const date_out_prod = req.body.date_out_prod;
+        const time_out_prod = req.body.time_out_prod;
+        let response = "";
+ 
+        console.log(operator, total_ok_prod, qr_kanban_in, date_out_prod, time_out_prod);
+        // CHeck qr_kanban_in and already have date/time in prod correctly ?
+        const isExist = await new Promise((resolve, reject) => {
+            connection.query(`
+                SELECT * FROM tb_dnth WHERE qr_kanban_in = ? AND date_in_prod IS NOT NULL AND date_out_prod IS NULL
+            `, [qr_kanban_in], (err, results) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(results.length > 0);
+                }
+            });
+        });
+        console.log(isExist);
+        // Check Ok qty that more than qty_kanban_in ?
+        const qtyKanbanIn = await new Promise((resolve, reject) => {
+            connection.query(`
+                SELECT * FROM tb_dnth WHERE qr_kanban_in = ? AND date_in_prod IS NOT NULL
+            `, [qr_kanban_in], (err, results) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(results);
+                }
+            });
+        });
+        console.log(qtyKanbanIn);
+        
+        let qty_kanban_in = 0;
+        // If can query the qty_kanban_in value
+        if (qtyKanbanIn.length > 0 && isExist) {
+            if (total_ok_prod > qtyKanbanIn[0].qty_kanban_in) {
+                response = "0";
+                console.log("OK qty invalid value");
+                res.redirect(`/prod_out_new?response=${response}`);
+            } else {
+                // If all condition is CORRECTLY
+                console.log("OK qty value is correctly");
+                qty_kanban_in = parseInt(qtyKanbanIn[0].qty_kanban_in);
+                response = "1";
+
+                // Update data into table 
+                await connection.query(`
+                    UPDATE tb_dnth SET operator = ?, total_ok_prod = ?,
+                    total_ng_prod = ?, date_out_prod = ?, time_out_prod = ? 
+                    WHERE qr_kanban_in = ? AND date_in_prod IS NOT NULL
+                `, [operator, total_ok_prod, qty_kanban_in - total_ok_prod, date_out_prod, time_out_prod, qr_kanban_in],
+                (err, results) => {
+                    if (err) {
+                        console.log(err);
+                        res.send(err);
+                    } else {
+                        console.log("Update prod output data successfully");
+                    }
+                })
+
+                res.redirect(`/prod_out_new?response=${response}`);
+            }
+        } else {
+            console.log("Can't query qty_kanban_in value or already output");
+            response = "0";
+            res.redirect(`/prod_out_new?response=${response}`);
+        }
+
+        console.log(isExist);
+        console.log("Response : ", response);
+
+    } catch (error) {
+        console.error('Error : ', error);
+        res.status(500).send('Internal Server Error');
+    }
+})
+
 
 
 // ____________________________CREATE KANBAN OUT PAGE_______________________________________
@@ -1291,6 +1540,29 @@ app.post('/submit', (req, res) => {
 //_____________________________________________________________________________________________________________________________________
 //_____________________________________________________________________________________________________________________________________
 //_____________________________________________________________________________________________________________________________________
+async function checkDataExists(tableName, conditions) {
+    try {
+        const queryConditions = Object.entries(conditions).map(([colName, colValue]) => `${colName} = ?`).join(' AND ');
+        const queryValues = Object.values(conditions);
+
+        const isExist = await new Promise((resolve, reject) => {
+            connection.query(`
+                SELECT * FROM ${tableName} WHERE ${colName} = ?
+            `, [colValue], (err, results) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(results.length > 0);
+                }
+            });
+        });
+
+        return isExist;
+    } catch (error) {
+        console.error('Error:', error);
+        throw error;
+    }
+}
 // Function to check if a column exists in a table 
 async function doesColumnExist(connection, tableName, columnName) {
     return new Promise((resolve, reject) => {
@@ -1337,6 +1609,108 @@ function formatTime(date) {
     const seconds = date.getSeconds().toString().padStart(2, '0');
     return `${hours}:${minutes}:${seconds}`;
   }
+
+  
+
+app.get('/master_setting/pn_setting', isAuthenticated, async (req, res) => {
+    try {
+
+        const pn_datas = await new Promise((resolve, reject) => {
+            connection.query(`
+                SELECT * FROM tb_partNumber;
+            `, (err, results) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(results);
+                }
+            });
+        })
+        
+        console.log(pn_datas.length);
+
+        res.render('master_setting/set_pn', {pn_datas});
+
+    } catch (error) {
+        console.error('Error : ', error);
+        res.status(500).send('Internal Server Error');
+    }
+});
+app.post('/master_setting/pn_setting/add', async (req, res) => {
+    const tsk_pn = req.body.tsk_pn;
+    const dnth_pn = req.body.dnth_pn;
+    const ttt_pn = req.body.ttt_pn;
+    const nts_pn = req.body.nts_pn;
+    const sdm_pn = req.body.sdm_pn;
+
+    console.log(tsk_pn, dnth_pn, ttt_pn, nts_pn, sdm_pn);
+
+    await connection.query(`
+        INSERT INTO tb_partNumber (tsk_pn, dnth_pn, ttt_pn, nts_pn, sdm_pn) 
+        VALUES (?, ?, ?, ?, ?)
+    `, [tsk_pn, dnth_pn, ttt_pn, nts_pn, sdm_pn], (err, results) => {
+        if (err) {
+            console.log(err);
+            res.send(err);
+        } else {
+            console.log('Insert success');
+            res.redirect('/master_setting/pn_setting');
+        }
+    });
+});
+app.get('/master_setting/pn_setting/edit', isAuthenticated, async (req, res) => {
+    const id = req.query.id;
+
+    console.log("ID ", id);
+
+    const datas = await new Promise((resolve, reject) => {
+        connection.query('SELECT * FROM tb_partNumber WHERE id = ?',
+        [id], (err, results) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(results);
+            }
+        });
+    });
+    
+    res.render('master_setting/edit_pn', {datas});
+});
+app.post('/master_setting/pn_setting/editing', async (req, res) => {
+    const id = req.body.id;
+    const tsk_pn = req.body.tsk_pn;
+    const dnth_pn = req.body.dnth_pn;
+    const ttt_pn = req.body.ttt_pn;
+    const nts_pn = req.body.nts_pn;
+    const sdm_pn = req.body.sdm_pn;
+
+    await connection.query(`
+        UPDATE tb_partNumber SET tsk_pn = ?, dnth_pn = ?, ttt_pn = ?,
+        nts_pn = ?, sdm_pn = ? WHERE id = ?
+    `, [tsk_pn, dnth_pn, ttt_pn, nts_pn, sdm_pn, id], (err, results) => {
+        if (err) {
+            console.log(err);
+            res.send(err);
+        } else {
+            console.log("UPdate Successfully");
+            res.redirect('/master_setting/pn_setting');
+        }
+    })
+});
+app.get('/master_setting/pn_setting/deleting', isAuthenticated, async (req, res) => {
+    const id = req.query.id;
+    await connection.query(`
+        DELETE FROM tb_partNumber WHERE id = ?
+    `, [id], (err, results) => {
+        if (err) {
+            console.log(err);
+            res.send(err);
+        } else {
+            console.log("Delete successfully");
+            res.redirect('/master_setting/pn_setting');
+        }
+    });
+})
 
 
 // Admin page
