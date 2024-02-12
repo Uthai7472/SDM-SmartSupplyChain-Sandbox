@@ -161,6 +161,15 @@ app.get('/', async (req, res) => {
             }
         });
         // await connection.query(`
+        //     ALTER TABLE tb_dnth ADD dnth_partNumber VARCHAR(20)
+        // `, (err, results) => {
+        //     if(err) {
+        //         console.log(err);
+        //     } else {
+        //         console.log("Add column dnth_partNumber completed");
+        //     }
+        // })
+        // await connection.query(`
         //     ALTER TABLE tb_partNumber ADD id INT PRIMARY KEY AUTO_INCREMENT
         // `, (err, results) => {
         //     if(err) {
@@ -1382,6 +1391,134 @@ app.post('/create_kanban_out/submit', async (req, res) => {
 
 
 
+//____________________________CREATE PACKING LIST PAGE NEW_______________________________________
+app.get('/create_pl_new', isAuthenticated, async (req, res) => {
+    try {
+        const shop_datas = await new Promise((resolve, reject) => {
+            connection.query(`
+                SELECT partNumber, SUM(total_ok_prod) AS total_ok, qty_kanban_in, COUNT(partNumber) as box_qty
+                FROM tb_dnth
+                WHERE date_out_prod IS NOT NULL AND dnth_pl IS NULL
+                GROUP BY partNumber
+                ORDER BY partNumber;
+            `, (err, results) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    console.log("shop_datas:");
+                    if (!results.length) {
+                        results = "";
+                        resolve(results);
+                        console.log(results);
+                    } else {
+                        resolve(results);
+                        console.log(results);
+                    }
+                }
+            });
+        });
+
+        const all_datas = await new Promise((resolve, reject) => {
+            connection.query(`
+                SELECT * FROM tb_dnth
+                WHERE date_out_prod IS NOT NULL AND dnth_pl IS NULL
+                ORDER BY date_out_prod, time_out_prod;
+            `, (err, results) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    console.log("all_datas:");
+                    if (!results.length) {
+                        results = "";
+                        resolve(results);
+                        // console.log(results);
+                    } else {
+                        resolve(results);
+                        // console.log(results);
+                    }
+                }
+            });
+        });
+
+        res.render('create_pl_new', {shop_datas, all_datas});
+
+    } catch (error) {
+        console.error('Error : ', error);
+        res.status(500).send('Internal Server Error');
+    }
+});
+let tskPlCounter = 0;
+let dnthPlCounter = 0;
+let tttPlCounter = 0;
+let ntsPlCounter = 0;
+app.post('/create_pl_new/update', async (req, res) => {
+    try {
+        const dnth_partNumbers = req.body.dnth_partNumber;
+        const shop_boxs = req.body.shop_box;
+        const shop_qtys = req.body.shop_qty;
+        const dnth_submit = req.body.dnth_submit;
+
+        let uniqueCode = '';
+
+        console.log("Shop box: ", shop_boxs);
+        console.log("DNTH submit: ", !dnth_submit);
+
+        // Generate PL code
+        if (!dnth_submit) {
+            dnthPlCounter++;
+            uniqueCode = 'DNTHPL' + dnthPlCounter.toString().padStart(1, '0');
+            console.log("DNTH CODE: ", uniqueCode);
+            // localStorage.setItem('dnthCounter', dnthCounter);
+        }
+
+        const updatePromises = [];
+        for (let i = 0; i < dnth_partNumbers.length; i++) {
+            const rowIndex = i;
+            const dnth_partNumber = dnth_partNumbers[rowIndex];
+            const shop_box = parseInt(shop_boxs[rowIndex]);
+            const shop_qty = shop_qtys[rowIndex];
+
+            const kanban_datas = await new Promise((resolve, reject) => {
+                connection.query(`
+                    SELECT qr_kanban_in FROM tb_dnth
+                    WHERE dnth_pl IS NULL AND partNumber = ?
+                    ORDER BY date_out_prod, time_out_prod
+                    LIMIT ?
+                `, [dnth_partNumber, shop_box], (err, results) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve(results);
+                        
+                    }
+                })
+            });
+            console.log("Kanban data create PL : ", kanban_datas[0].qr_kanban_in);
+
+            const updatePromise = await new Promise((resolve, reject) => {
+                connection.query(`
+                    UPDATE tb_dnth SET dnth_pl = ?
+                    WHERE qr_kanban_in = ?
+                `, [uniqueCode, kanban_datas[0].qr_kanban_in], (err, results) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        console.log("Update DNTH PL successfully");
+                    }
+                })
+            });
+
+            updatePromises.push(updatePromise);
+            console.log("Shop QTY : ", shop_qty);
+        }
+
+    } catch (error) {
+        console.error('Error : ', error);
+        res.status(500).send('Internal Server Error');
+    }
+})
+
+
 // ____________________________CREATE PACKING LIST PAGE_______________________________________
 app.get('/create_pl', isAuthenticated, async (req,res) => {
     try {
@@ -1409,10 +1546,7 @@ app.get('/create_pl', isAuthenticated, async (req,res) => {
     }
 });
 
-let tskPlCounter = 0;
-let dnthPlCounter = 0;
-let tttPlCounter = 0;
-let ntsPlCounter = 0;
+
 app.post('/create_pl/update_qr_pl', async (req,res) => {
     try {
         const qr_boxes = req.body.qr_box;
