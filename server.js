@@ -10,6 +10,8 @@ const path = require('path');
 const { error, table } = require('console');
 const { resolve } = require('dns');
 const { rejects } = require('assert');
+const qrcode = require('qrcode');
+const fs = require('fs');
 
 const port = 5672;
 
@@ -161,7 +163,7 @@ app.get('/', async (req, res) => {
             }
         });
         // await connection.query(`
-        //     ALTER TABLE tb_dnth ADD dnth_partNumber VARCHAR(20)
+        //     ALTER TABLE tb_dnth ADD time_out_pl TIME
         // `, (err, results) => {
         //     if(err) {
         //         console.log(err);
@@ -169,6 +171,16 @@ app.get('/', async (req, res) => {
         //         console.log("Add column dnth_partNumber completed");
         //     }
         // })
+        // const col_names = await new Promise((resolve, reject) => {
+        //     connection.query(`SHOW COLUMNS FROM tb_dnth;`, (err, results) => {
+        //         if (err) {
+        //             reject(err);
+        //         } else {
+        //             resolve(results);
+        //         }
+        //     })
+        // });
+        // console.log(col_names);
         // await connection.query(`
         //     ALTER TABLE tb_partNumber ADD id INT PRIMARY KEY AUTO_INCREMENT
         // `, (err, results) => {
@@ -1394,6 +1406,16 @@ app.post('/create_kanban_out/submit', async (req, res) => {
 //____________________________CREATE PACKING LIST PAGE NEW_______________________________________
 app.get('/create_pl_new', isAuthenticated, async (req, res) => {
     try {
+        const response = req.query.response;
+        let dnth_pl = req.query.dnth_pl;
+
+        // if (dnth_pl === undefined) {
+        //     dnth_pl = '';
+        // }
+
+        console.log('Response : ', response);
+        console.log('dnth_pl : ', dnth_pl);
+
         const shop_datas = await new Promise((resolve, reject) => {
             connection.query(`
                 SELECT partNumber, SUM(total_ok_prod) AS total_ok, qty_kanban_in, COUNT(partNumber) as box_qty
@@ -1409,10 +1431,10 @@ app.get('/create_pl_new', isAuthenticated, async (req, res) => {
                     if (!results.length) {
                         results = "";
                         resolve(results);
-                        console.log(results);
+                        // console.log(results);
                     } else {
                         resolve(results);
-                        console.log(results);
+                        // console.log(results);
                     }
                 }
             });
@@ -1421,10 +1443,11 @@ app.get('/create_pl_new', isAuthenticated, async (req, res) => {
         const all_datas = await new Promise((resolve, reject) => {
             connection.query(`
                 SELECT * FROM tb_dnth
-                WHERE date_out_prod IS NOT NULL AND dnth_pl IS NULL
+                WHERE date_out_prod IS NOT NULL AND dnth_pl = ?
                 ORDER BY date_out_prod, time_out_prod;
-            `, (err, results) => {
+            `,[dnth_pl], (err, results) => {
                 if (err) {
+                    console.log(err);
                     reject(err);
                 } else {
                     console.log("all_datas:");
@@ -1432,15 +1455,45 @@ app.get('/create_pl_new', isAuthenticated, async (req, res) => {
                         results = "";
                         resolve(results);
                         // console.log(results);
-                    } else {
-                        resolve(results);
-                        // console.log(results);
                     }
+                    resolve(results);
                 }
             });
         });
 
-        res.render('create_pl_new', {shop_datas, all_datas});
+        const pl_histories = await new Promise((resolve, reject) => {
+            connection.query(`
+                SELECT DISTINCT dnth_pl FROM tb_dnth
+                WHERE date_out_prod IS NOT NULL AND dnth_pl IS NOT NULL
+                ORDER BY date_out_pl, time_out_pl;
+            `,[dnth_pl], (err, results) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    if (!results.length) {
+                        results = "";
+                        resolve(results);
+                        // console.log(results);
+                    }
+                    resolve(results);
+                }
+            });
+        }); 
+
+        let qrcode_path = `static/picture/qrcode${dnth_pl}.png`
+
+        if (dnth_pl !== null && dnth_pl !== undefined && dnth_pl !== "") {
+            qrcode.toFile(qrcode_path, dnth_pl, {
+                errorCorrectionLevel: 'H', // Optional: Specify the error correction level (H: High, L: Low, M: Medium, Q: Quartile)
+                type: 'png', // Optional: Specify the image type (png, jpeg, svg)
+                quality: 0.92 // Optional: Specify the image quality (0.0 - 1.0)
+              }, (err) => {
+                if (err) throw err;
+                console.log('QR code saved!');
+              });
+        }
+
+        res.render('create_pl_new', {shop_datas, all_datas, qrcode_path, dnth_pl, pl_histories, response});
 
     } catch (error) {
         console.error('Error : ', error);
@@ -1453,65 +1506,114 @@ let tttPlCounter = 0;
 let ntsPlCounter = 0;
 app.post('/create_pl_new/update', async (req, res) => {
     try {
+
         const dnth_partNumbers = req.body.dnth_partNumber;
         const shop_boxs = req.body.shop_box;
         const shop_qtys = req.body.shop_qty;
         const dnth_submit = req.body.dnth_submit;
+        const date_out_pl = req.body.date_out_pl;
+        const time_out_pl = req.body.time_out_pl;
 
         let uniqueCode = '';
+        let response = '';
 
         console.log("Shop box: ", shop_boxs);
         console.log("DNTH submit: ", !dnth_submit);
+        console.log("Date out PL : ", date_out_pl);
+        console.log("Time out PL : ", time_out_pl);
 
         // Generate PL code
         if (!dnth_submit) {
             dnthPlCounter++;
             uniqueCode = 'DNTHPL' + dnthPlCounter.toString().padStart(1, '0');
             console.log("DNTH CODE: ", uniqueCode);
+            // console.log("DNTH PartNumber Length: ", shop_boxs.length);
             // localStorage.setItem('dnthCounter', dnthCounter);
+
+            if (shop_boxs !== undefined) {
+                console.log("DNTH PartNumber Length: ", shop_boxs.length);
+                const updatePromises = [];
+                for (let i = 0; i < dnth_partNumbers.length; i++) {
+                    const rowIndex = i;
+                    const dnth_partNumber = dnth_partNumbers[rowIndex];
+                    const shop_box = parseInt(shop_boxs[rowIndex]);
+                    const shop_qty = shop_qtys[rowIndex];
+
+                    const updatePromise = await new Promise((resolve, reject) => {
+                        connection.query(`
+                            UPDATE tb_dnth SET dnth_pl = ?, date_out_pl = ?, time_out_pl = ?
+                            WHERE qr_kanban_in IN (
+                                    SELECT qr_kanban_in 
+                                    FROM (
+                                        SELECT qr_kanban_in
+                                        FROM tb_dnth
+                                        WHERE dnth_pl IS NULL AND partNumber = ?
+                                        ORDER BY date_out_prod, time_out_prod
+                                        LIMIT ?
+                                    ) AS subquery
+                                )
+                        `, [uniqueCode, date_out_pl, time_out_pl, dnth_partNumber, shop_box], (err, results) => {
+                            if (err) {
+                                reject(err);
+                                response = '0';
+                            } else {
+                                resolve(results);
+                                console.log("Update DNTH PL successfully");
+                                response = '1';
+                                // console.log('shop_box length : ', shop_box.length)
+                            }
+                        })
+                    });
+
+                    updatePromises.push(updatePromise);
+                    console.log("Shop QTY : ", shop_qty);
+                }
+            } else {
+                // shop_boxs = "";
+                response = "0";
+                uniqueCode = '';
+                res.redirect(`/create_pl_new?response=${response}&dnth_pl=${uniqueCode}`);
+            }
+        } else {
+            dnthPlCounter = dnthPlCounter;
         }
+        console.log("DNTH uniquecode Send : ", uniqueCode);
+        res.redirect(`/create_pl_new?response=${response}&dnth_pl=${uniqueCode}`);
 
-        const updatePromises = [];
-        for (let i = 0; i < dnth_partNumbers.length; i++) {
-            const rowIndex = i;
-            const dnth_partNumber = dnth_partNumbers[rowIndex];
-            const shop_box = parseInt(shop_boxs[rowIndex]);
-            const shop_qty = shop_qtys[rowIndex];
+    } catch (error) {
+        console.error('Error : ', error);
+        res.status(500).send('Internal Server Error');
+    }
+});
+app.post('/create_pl_new/show_pl', async (req, res) => {
+    try {
+        const dnth_pl_selected = req.body.dnth_pl_selected;
 
-            const kanban_datas = await new Promise((resolve, reject) => {
-                connection.query(`
-                    SELECT qr_kanban_in FROM tb_dnth
-                    WHERE dnth_pl IS NULL AND partNumber = ?
-                    ORDER BY date_out_prod, time_out_prod
-                    LIMIT ?
-                `, [dnth_partNumber, shop_box], (err, results) => {
-                    if (err) {
-                        reject(err);
-                    } else {
-                        resolve(results);
-                        
-                    }
-                })
-            });
-            console.log("Kanban data create PL : ", kanban_datas[0].qr_kanban_in);
+        console.log(dnth_pl_selected);
 
-            const updatePromise = await new Promise((resolve, reject) => {
-                connection.query(`
-                    UPDATE tb_dnth SET dnth_pl = ?
-                    WHERE qr_kanban_in = ?
-                `, [uniqueCode, kanban_datas[0].qr_kanban_in], (err, results) => {
-                    if (err) {
-                        reject(err);
-                    } else {
-                        console.log("Update DNTH PL successfully");
-                    }
-                })
-            });
+        res.redirect(`/create_pl_new?dnth_pl=${dnth_pl_selected}`);
 
-            updatePromises.push(updatePromise);
-            console.log("Shop QTY : ", shop_qty);
-        }
+    } catch (error) {
+        console.error('Error : ', error);
+        res.status(500).send('Internal Server Error');
+    }
+})
+app.get('/create_pl_new/reset_pl', isAuthenticated, async (req, res) => {
+    try {
+        dnthPlCounter = 0;
 
+        await connection.query(`
+            UPDATE tb_dnth SET dnth_pl = NULL, date_out_pl = NULL, time_out_pl = NULL
+        `, (err, results) => {
+            if (err) {
+                console.log(err);
+                res.send(err);
+            } else {
+                console.log("Reset successfully");
+                res.redirect('/create_pl_new');
+            }
+        });
+        
     } catch (error) {
         console.error('Error : ', error);
         res.status(500).send('Internal Server Error');

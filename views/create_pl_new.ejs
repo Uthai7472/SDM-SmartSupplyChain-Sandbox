@@ -16,6 +16,8 @@
             justify-content: center;
             align-items: center;
             border: 3px solid red; */
+            background-color: black;
+            color: white;
       }
       .main_form {
         display: flex;
@@ -23,9 +25,9 @@
         /* align-items: center; */
         margin: 3px 3px;
         width: auto;
-        height: 50vh;
-        /* border: 1px solid gray;
-            border-radius: 10px 10px; */
+        height: 450px;
+        border: 1px solid gray;
+        border-radius: 10px 10px;
       }
       .left_form {
         display: flex;
@@ -33,7 +35,7 @@
         justify-content: flex-start;
         /* align-items: center; */
         width: 49%;
-        height: 50vh;
+        height: 450px;
         /* border: 3px solid red; */
         border: 1px solid gray;
         border-radius: 10px 10px;
@@ -41,13 +43,35 @@
       }
       .right-form {
         display: flex;
-        justify-content: center;
+        flex-direction: column;
+        /* justify-content: center; */
         align-items: center;
         width: 49%;
         height: auto;
         /* border: 3px solid red; */
         border: 1px solid gray;
         border-radius: 10px 10px;
+      }
+      .right_form_topic {
+        width: auto;
+        height: auto;
+        /* border: 3px solid red; */
+        display: flex;
+        justify-content: center;
+      }
+      .right_form_detail {
+        width: 700px;
+        border: 2px solid gray;
+        border-radius: 10px 10px;
+        /* display: flex; */
+        /* justify-content: center; */
+        /* border: 3px solid red; */
+      }
+      .show_btn {
+        width: auto;
+        height: auto;
+        border: 3px solid black;
+        bottom: 0;
       }
       .left_form_topic {
         display: flex;
@@ -71,12 +95,89 @@
       .left_form_btn {
         display: flex;
         justify-content: center;
+        gap: 60px;
         width: auto;
+        /* font-size: 24px; */
         /* border: 1px solid red; */
+      }
+      .btn {
+        font-size: 20px;
       }
       .table input{
         width: 80%;
       }
+
+      .pl_preview {
+        width: auto;
+        height: 100vh;
+        border: 3px solid rgb(0, 0, 0);
+        margin-top: 30px;
+      }
+      .pl_topic {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-bottom: 3px solid rgb(0, 0, 0);
+        background-color: rgb(190, 190, 190);
+      }
+      .pl_detail {
+        width: auto;
+        height: 35vh;
+        /* border: 1px solid rgb(81, 255, 0); */
+        display: flex;
+
+      }
+      .pl_detail_left {
+        /* position: absolute; */
+        /* border: 1px solid rgb(0, 204, 255); */
+        width: 50%;
+        height: 35vh;
+        padding-left: 10px;
+        padding-top: 20px;
+      }
+      .pl_detail_right {
+        width: 50%;
+        height: 35vh;
+        /* border: 1px solid rgb(55, 0, 255); */
+        display: flex;
+        justify-content: flex-end;
+      }
+      .qrcode {
+        position: absolute;
+        width: 18vh;
+        /* border: 1px solid rgb(55, 0, 255); */
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        right: 2vw;
+      }
+      .qrcode_topic {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: 5px;
+        /* border: 1px solid rgb(55, 0, 255); */
+      }
+      .qrcode_img {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: -5px;
+        width: 200px;
+        height: 200px;
+        /* border: 1px solid rgb(55, 0, 255); */
+      }
+      .table {
+        font-size: 20px;
+        
+      }
+      thead {
+        border: 3px solid black;
+        border-left: 0px;
+        border-right: 0px;
+      }
+
     </style>
   </head>
   <body>
@@ -102,52 +203,161 @@
             </thead>
             <tbody>
               <form action="/create_pl_new/update" method="POST">
-                <% shop_datas.forEach((shop_data, index) => { %>
-                <tr>
-                    <td>
-                    <input
-                        type="text"
-                        name="dnth_partNumber[]"
-                        id="dnth_partNumber_<%= index %>"
-                        value="<%= shop_data.partNumber %>"
-                        readonly
-                    />
-                    </td>
-                    <td>
-                    <input
-                        type="number"
-                        name="shop_box[]"
-                        id="shop_box_<%= index %>"
-                        value="0"
-                        onchange="updateShopQty(this.value, <%= shop_data.qty_kanban_in %>, <%= shop_data.total_ok %>,<%= shop_data.box_qty %>, <%= index %>)"
-                    />
-                    /<%= shop_data.box_qty
-                    %>
-                    </td>
-                    <td>
-                    <input
-                        type="number"
-                        name="shop_qty[]"
-                        id="shop_qty_<%= index %>"
-                        value="0"
-                        readonly
-                    />
-                    /<%= shop_data.total_ok %>
-                    </td>
-                </tr>
-                <% }) %>
+                <% if (shop_datas.length > 0) { %>
+                    <% shop_datas.forEach((shop_data, index) => { %>
+                    <tr>
+                        <td>
+                        <input
+                            type="text"
+                            name="dnth_partNumber[]"
+                            id="dnth_partNumber_<%= index %>"
+                            value="<%= shop_data.partNumber %>"
+                            readonly
+                        />
+                        </td>
+                        <td>
+                        <input
+                            type="number"
+                            name="shop_box[]"
+                            id="shop_box_<%= index %>"
+                            value="0"
+                            onchange="updateShopQty(this.value, <%= shop_data.qty_kanban_in %>, <%= shop_data.total_ok %>,<%= shop_data.box_qty %>, <%= index %>)"
+                        />
+                        /<%= shop_data.box_qty
+                        %>
+                        </td>
+                        <td>
+                        <input
+                            type="number"
+                            name="shop_qty[]"
+                            id="shop_qty_<%= index %>"
+                            value="0"
+                            readonly
+                        />
+                        /<%= shop_data.total_ok %>
+                        </td>
+                    </tr>
+                    <% }) %>
+                <% } %>
                 
             
             </tbody>
           </table>
         </div>
+        <div>
+            <input type="text" id="date_out_pl" name="date_out_pl" readonly hidden>
+            <input type="text" id="time_out_pl" name="time_out_pl" readonly hidden>
+        </div>
         <div class="left_form_btn">
-            <button type="submit" class="btn btn-success" id="dnth_submit" name="dnth_submit">Submit</button>
+            <% if (shop_datas === undefined || shop_datas === "") { %> 
+                <button type="submit" class="btn btn-success" id="dnth_submit" name="dnth_submit" disabled>Submit</button>
+                <a href="/create_pl_new/reset_pl" class="btn btn-danger">Reset PL</a>
+            <% } else { %>
+                <button type="submit" class="btn btn-success" id="dnth_submit" name="dnth_submit">Submit</button>
+                <a href="/create_pl_new/reset_pl" class="btn btn-danger">Reset PL</a>
+            <% } %>
         </div>
         </form>
       </div>
 
-      <div class="right-form" id="right-form"></div>
+      <div class="right-form" id="right-form">
+        <div class="right_form_topic">
+            <h3>History Packing List</h3>
+        </div>
+        <p></p>
+        <form action="/create_pl_new/show_pl" method="POST">
+            <div class="right_form_detail">
+                <select name="dnth_pl_selected" id="dnth_pl_selected" class="form-control">
+                    <option value=""></option>
+                    <% if (pl_histories.length > 0) { %>
+                        <% pl_histories.forEach((row) => { %>
+                            <option value="<%= row.dnth_pl %>"><%= row.dnth_pl %></option>
+                        <% }) %>
+                    <% } %>
+                </select>
+            </div>
+            <div class="show_btn">
+                <button class="btn btn-info" id="show_pl_btn" type="submit">Show</button>
+            </div>
+        </form>
+        <div class="right_form_btn">
+            <button class="btn btn-primary" type="button">Print</button>
+            <button class="btn btn-secondary" type="button" id="clear_pl_btn">Clear</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="pl_preview">
+        <div class="pl_topic">
+            <h1>SIAM DENSO MANUFACTURING CO.LTD (SDM)</h1>
+        </div>
+        <div class="pl_detail">
+            <div class="pl_detail_left">
+                <div>
+                    <h4 style="display: inline;">SHIP SUPPLIER Name : </h4>
+                    <span style="display: inline; font-size: 22px;">DENSO(THAILAND) CO.,LTD.</span>
+                </div>
+                <div>
+                    <h4 style="display: inline;">ORDER SUP.NAME : </h4>
+                    <span style="display: inline; font-size: 22px;">Thai Tohken Thermo Co.,Ltd.</span>
+                </div>
+                <div>
+                    <h4 style="display: inline;">DELIVERY TO : </h4>
+                    <span style="display: inline; font-size: 22px;">Thai Tohken Thermo Co.,Ltd.</span>
+                </div>
+                <p></p>
+
+                <div style="margin-top: 30px;">
+                    <h4 style="display: inline;">ISSUE DATE : </h4>
+                    <span style="display: inline; font-size: 22px;">
+                        <% if (all_datas && all_datas.length > 0 && all_datas[0].date_out_pl !== null) { %>
+                            <%= all_datas[0].date_out_pl.toLocaleDateString('en-GB') %>
+                        <% } else { %> 
+                            _ _ _ _ _ _ _ _ _
+                        <% } %>
+                    </span>
+                    <h4 style="display: inline;">TIME : </h4>
+                    <span style="display: inline; font-size: 22px;">
+                        <% if (all_datas && all_datas.length > 0 && all_datas[0].time_out_pl !== null) { %>
+                            <%= all_datas[0].time_out_pl %>
+                        <% } else { %> 
+                            _ _ _ _ _ _ _ _ _
+                        <% } %>
+                    </span>
+                </div>
+                
+            </div>
+            <div class="pl_detail_right">
+                <div class="qrcode">
+                    <h5 class="qrcode_topic"><%= dnth_pl %></h5>
+                    <% if (all_datas && all_datas.length > 0 && all_datas[0].date_out_pl !== null) { %>
+                        <img class="qrcode_img" src="<%= qrcode_path %>" alt="">
+                    <% } %>
+                </div>
+            </div>
+        </div>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>NO.</th>
+                    <th>PART NUMBER</th>
+                    <th>KANBAN IN (PREV.)</th>
+                    <th>QTY.</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (all_datas.length > 0) { %>
+                    <% all_datas.forEach((all_data, index) => { %> 
+                        <tr>
+                            <td><%= index + 1 %></td>
+                            <td><%= all_data.partNumber %></td>
+                            <td><%= all_data.qr_kanban_in %></td>
+                            <td><%= all_data.total_ok_prod %></td>
+                        </tr>
+                    <% }) %>
+                <% } %>
+            </tbody>
+        </table>
     </div>
 
     <script>
@@ -166,6 +376,37 @@
             }
         }
       }
+
+      document.getElementById("dnth_submit").addEventListener("click", function () {
+        const dnthSubmiะ = this.value;
+        const dateOutPlInput = document.getElementById("date_out_pl");
+        const timeOutPlInput = document.getElementById("time_out_pl");
+
+        if (!dnthSubmiะ) {
+          const currentDate = new Date();
+          const currentYear = currentDate.getFullYear();
+          const currentMonth = String(currentDate.getMonth() + 1).padStart(
+            2,
+            "0"
+          );
+          const currentDay = String(currentDate.getDate()).padStart(2, "0");
+          const currentHours = String(currentDate.getHours()).padStart(2, "0");
+          const currentMinutes = String(currentDate.getMinutes()).padStart(
+            2,
+            "0"
+          );
+          const currentSeconds = String(currentDate.getSeconds()).padStart(
+            2,
+            "0"
+          );
+
+          dateOutPlInput.value = `${currentYear}-${currentMonth}-${currentDay}`;
+          timeOutPlInput.value = `${currentHours}:${currentMinutes}:${currentSeconds}`;
+        } else {
+            dateOutPlInput.value = "";
+          timeOutPlInput.value = "";
+        }
+      });
     </script>
   </body>
 </html>
