@@ -25,7 +25,7 @@
         /* align-items: center; */
         margin: 3px 3px;
         width: auto;
-        height: 450px;
+        height: 29rem;
         border: 1px solid gray;
         border-radius: 10px 10px;
       }
@@ -34,7 +34,7 @@
         flex-direction: column;
         justify-content: flex-start;
         /* align-items: center; */
-        width: 49%;
+        width: 90rem;
         height: 450px;
         /* border: 3px solid red; */
         border: 1px solid gray;
@@ -46,7 +46,7 @@
         flex-direction: column;
         /* justify-content: center; */
         align-items: center;
-        width: 49%;
+        width: 20rem;
         height: auto;
         /* border: 3px solid red; */
         border: 1px solid gray;
@@ -60,18 +60,22 @@
         justify-content: center;
       }
       .right_form_detail {
-        width: 700px;
+        width: 10rem;
         border: 2px solid gray;
         border-radius: 10px 10px;
         /* display: flex; */
         /* justify-content: center; */
         /* border: 3px solid red; */
       }
-      .show_btn {
-        width: auto;
+      .show_btn .btn{
+        width: 10rem;
         height: auto;
-        border: 3px solid black;
-        bottom: 0;
+        margin-top: 5px;
+        /* border: 3px solid black; */
+        /* margin-top: 10rem; */
+      }
+      .right_form_btn {
+        margin-top: 8rem;
       }
       .left_form_topic {
         display: flex;
@@ -99,6 +103,7 @@
         width: auto;
         /* font-size: 24px; */
         /* border: 1px solid red; */
+
       }
       .btn {
         font-size: 20px;
@@ -122,7 +127,7 @@
       }
       .pl_detail {
         width: auto;
-        height: 35vh;
+        height: 20rem;
         /* border: 1px solid rgb(81, 255, 0); */
         display: flex;
 
@@ -131,13 +136,13 @@
         /* position: absolute; */
         /* border: 1px solid rgb(0, 204, 255); */
         width: 50%;
-        height: 35vh;
+        height: 20rem;
         padding-left: 10px;
         padding-top: 20px;
       }
       .pl_detail_right {
         width: 50%;
-        height: 35vh;
+        height: 20rem;
         /* border: 1px solid rgb(55, 0, 255); */
         display: flex;
         justify-content: flex-end;
@@ -150,7 +155,7 @@
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        right: 2vw;
+        right: 2rem;
       }
       .qrcode_topic {
         display: flex;
@@ -196,7 +201,7 @@
           <table class="table">
             <thead>
               <tr>
-                <th>P/N</th>
+                <th>DNTH P/N</th>
                 <th>Box</th>
                 <th>Pcs.</th>
               </tr>
@@ -211,7 +216,7 @@
                             type="text"
                             name="dnth_partNumber[]"
                             id="dnth_partNumber_<%= index %>"
-                            value="<%= shop_data.partNumber %>"
+                            value="<%= shop_data.dnth_partNumber %>"
                             readonly
                         />
                         </td>
@@ -287,7 +292,7 @@
       </div>
     </div>
 
-    <div class="pl_preview">
+    <div class="pl_preview" style="display: block;">
         <div class="pl_topic">
             <h1>SIAM DENSO MANUFACTURING CO.LTD (SDM)</h1>
         </div>
@@ -407,6 +412,18 @@
           timeOutPlInput.value = "";
         }
       });
+
+      document.getElementById('show_pl_btn').addEventListener('click', function() {
+        var plPreview = document.querySelector('.pl_preview');
+        if(plPreview.style.display === 'none') {
+            plPreview.style.display = 'block';
+        }
+      });
+      document.getElementById('clear_pl_btn').addEventListener('click', function() {
+        var plPreview = document.querySelector('.pl_preview');
+        plPreview.innerHTML = '';
+      });
+
     </script>
   </body>
 </html>

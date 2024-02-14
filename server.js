@@ -1306,7 +1306,7 @@ app.get('/create_kanban_out', isAuthenticated, async (req, res) => {
     try {
         const get_datas = await new Promise((resolve, reject) => {
             connection.query(`
-                SELECT qr_kanban_in, qr_prod, qr_kanban_out, kanban_out_date, kanban_out_time, total_ok_prod FROM tb_dnth
+                SELECT * FROM tb_dnth
                 WHERE date_out_prod IS NOT NULL AND qr_kanban_out IS NOT NULL
             `, (err, results) => {
                 if (err) {
@@ -1317,7 +1317,7 @@ app.get('/create_kanban_out', isAuthenticated, async (req, res) => {
                 }
             })
         });
-        console.log("Get datas : ", get_datas);
+        // console.log("Get datas : ", get_datas);
         
         res.render('create_kanban_out', {get_datas});
 
@@ -1333,16 +1333,16 @@ let ntsKoCounter = 0;
 app.post('/create_kanban_out/submit', async (req, res) => {
     try {
         const selectedFactory = req.body.factory;
-        const qr_prod = req.body.qr_prod;
+        const qr_kanban_in = req.body.qr_kanban_in;
         const kanban_out_date = req.body.kanban_out_date;
         const kanban_out_time = req.body.kanban_out_time;
-        console.log(selectedFactory, qr_prod, kanban_out_date, kanban_out_time);
+        // console.log(selectedFactory, qr_kanban_in, kanban_out_date, kanban_out_time);
 
         const qr_kanban_in_results = await new Promise((resolve, reject) => {
             connection.query(`
-                SELECT qr_kanban_in, qr_prod FROM tb_dnth WHERE qr_prod = ?
-                AND date_out_prod IS NOT NULL AND time_out_prod IS NOT NULL
-            `, [qr_prod], (err, results) => {
+                SELECT qr_kanban_in, qr_prod FROM tb_dnth 
+                WHERE date_out_prod IS NOT NULL AND time_out_prod IS NOT NULL
+            `, (err, results) => {
                 if (err) {
                     reject(err);
                 } else {
@@ -1355,9 +1355,8 @@ app.post('/create_kanban_out/submit', async (req, res) => {
             
         const updatePromises = [];
         if (qr_kanban_in_results.length > 0) {
-            for (let i = 0; i < qr_kanban_in_results.length; i++) {
-                console.log(qr_kanban_in_results[i].qr_kanban_in);
-
+            // for (let i = 0; i < qr_kanban_in_results.length; i++) {
+            //     console.log(qr_kanban_in_results[i].qr_kanban_in);
                 let uniqueText = '';
 
                 if (selectedFactory === 'TSK') {
@@ -1376,12 +1375,38 @@ app.post('/create_kanban_out/submit', async (req, res) => {
 
                 console.log(uniqueText);
 
+                const old_pn = await new Promise((resolve, reject) => {
+                    connection.query(`
+                        SELECT partNumber FROM tb_dnth WHERE qr_kanban_in = ?
+                    `, [qr_kanban_in], (err, results) => {
+                        if (err) {
+                            reject(err);
+                        } else {
+                            resolve(results);
+                        }
+                    })
+                });
+                console.log("old_pn : ", old_pn[0].partNumber);
+
+                const new_pn = await new Promise((resolve, reject) => {
+                    connection.query(`
+                        SELECT dnth_pn FROM tb_partNumber WHERE tsk_pn = ?
+                    `, [old_pn[0].partNumber], (err, results) => {
+                        if (err) {
+                            reject(err);
+                        } else {
+                            resolve(results);
+                        }
+                    })
+                });
+                console.log("new_pn : ", new_pn[0].dnth_pn);
+
                 // Update each row
                 const updatePromise = await new Promise((resolve, reject) => {
                     connection.query(`
-                        UPDATE tb_dnth SET qr_kanban_out = ?, kanban_out_date = ?, kanban_out_time = ?
-                        WHERE qr_prod = ? AND qr_kanban_in = ?
-                    `, [uniqueText, kanban_out_date, kanban_out_time, qr_prod, qr_kanban_in_results[i].qr_kanban_in], (err, updateResult) => {
+                        UPDATE tb_dnth SET qr_kanban_out = ?, kanban_out_date = ?, kanban_out_time = ?, dnth_partNumber = ?
+                        WHERE qr_kanban_in = ?
+                    `, [uniqueText, kanban_out_date, kanban_out_time, new_pn[0].dnth_pn, qr_kanban_in], (err, updateResult) => {
                         if (err) {
                             reject(err);
                         } else {
@@ -1389,12 +1414,31 @@ app.post('/create_kanban_out/submit', async (req, res) => {
                         }
                     });
                 });
-                updatePromises.push(updatePromise);
-            }
+                // updatePromises.push(updatePromise);
+            // }
             res.redirect('/create_kanban_out');
         } else {
             res.redirect('/prod_page');
         }
+    } catch (error) {
+        console.error('Error : ', error);
+        res.status(500).send('Internal Server Error');
+    }
+});
+app.get('/create_kanban_out/reset_kb_out', isAuthenticated, async (req, res) => {
+    try {
+        await connection.query(`
+            UPDATE tb_dnth SET qr_kanban_out = NULL, kanban_out_date = NULL, kanban_out_time = NULL,
+            dnth_partNumber = NULL WHERE qr_kanban_out IS NOT NULL AND kanban_out_date IS NOT NULL
+        `, (err, results) => {
+            if (err) {
+                console.log(err);
+            } else {
+                console.log("RESET KB OUT SUCCESSFULLY");
+            }
+        });
+
+        res.redirect('/create_kanban_out');
     } catch (error) {
         console.error('Error : ', error);
         res.status(500).send('Internal Server Error');
@@ -1418,11 +1462,11 @@ app.get('/create_pl_new', isAuthenticated, async (req, res) => {
 
         const shop_datas = await new Promise((resolve, reject) => {
             connection.query(`
-                SELECT partNumber, SUM(total_ok_prod) AS total_ok, qty_kanban_in, COUNT(partNumber) as box_qty
+                SELECT dnth_partNumber, SUM(total_ok_prod) AS total_ok, qty_kanban_in, COUNT(dnth_partNumber) as box_qty
                 FROM tb_dnth
-                WHERE date_out_prod IS NOT NULL AND dnth_pl IS NULL
-                GROUP BY partNumber
-                ORDER BY partNumber;
+                WHERE date_out_prod IS NOT NULL AND dnth_pl IS NULL AND qr_kanban_out IS NOT NULL
+                GROUP BY dnth_partNumber
+                ORDER BY dnth_partNumber;
             `, (err, results) => {
                 if (err) {
                     reject(err);
@@ -1443,7 +1487,7 @@ app.get('/create_pl_new', isAuthenticated, async (req, res) => {
         const all_datas = await new Promise((resolve, reject) => {
             connection.query(`
                 SELECT * FROM tb_dnth
-                WHERE date_out_prod IS NOT NULL AND dnth_pl = ?
+                WHERE date_out_prod IS NOT NULL AND qr_kanban_out IS NOT NULL AND dnth_pl = ?
                 ORDER BY date_out_prod, time_out_prod;
             `,[dnth_pl], (err, results) => {
                 if (err) {
@@ -1509,7 +1553,7 @@ app.post('/create_pl_new/update', async (req, res) => {
 
         const dnth_partNumbers = req.body.dnth_partNumber;
         const shop_boxs = req.body.shop_box;
-        const shop_qtys = req.body.shop_qty;
+        // const shop_qtys = req.body.shop_qty;
         const dnth_submit = req.body.dnth_submit;
         const date_out_pl = req.body.date_out_pl;
         const time_out_pl = req.body.time_out_pl;
@@ -1537,7 +1581,7 @@ app.post('/create_pl_new/update', async (req, res) => {
                     const rowIndex = i;
                     const dnth_partNumber = dnth_partNumbers[rowIndex];
                     const shop_box = parseInt(shop_boxs[rowIndex]);
-                    const shop_qty = shop_qtys[rowIndex];
+                    // const shop_qty = shop_qtys[rowIndex];
 
                     const updatePromise = await new Promise((resolve, reject) => {
                         connection.query(`
@@ -1547,7 +1591,7 @@ app.post('/create_pl_new/update', async (req, res) => {
                                     FROM (
                                         SELECT qr_kanban_in
                                         FROM tb_dnth
-                                        WHERE dnth_pl IS NULL AND partNumber = ?
+                                        WHERE dnth_pl IS NULL AND dnth_partNumber = ?
                                         ORDER BY date_out_prod, time_out_prod
                                         LIMIT ?
                                     ) AS subquery
@@ -1566,7 +1610,7 @@ app.post('/create_pl_new/update', async (req, res) => {
                     });
 
                     updatePromises.push(updatePromise);
-                    console.log("Shop QTY : ", shop_qty);
+                    // console.log("Shop QTY : ", shop_qty);
                 }
             } else {
                 // shop_boxs = "";
