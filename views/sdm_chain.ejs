@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SDM OVERALL CHAIN</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+    />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <style>
+        .content_container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            /* border: 3px solid red; */
+
+        }
+            .top_block {
+                width: 100%;
+                height: 70%;
+                /* border: 3px solid red; */
+                /* overflow: hidden; */
+                display: flex;
+                flex-direction: row;
+                min-width: 400px;
+            }
+            p {
+                font-weight: bold;
+            }
+            .top_block img {
+                width: 100%;
+                height: 100%;
+            }
+            .input_model {
+                width: 100%;
+                height: 5rem;
+            }
+            
+            .tsk_stock {
+                width: 9.8rem;
+                height: 17rem;
+                /* border: 1px solid rgb(160, 160, 160); */
+                border-radius: 8px 8px;
+                position: relative;
+                display: flex;
+                flex-direction: column;
+                justify-content: flex-start;
+                
+                left: 3rem;
+                /* bottom: 20rem; */
+            }
+            .tsk_stock .image {
+                width: 100%;
+                height: 8rem;
+                /* border: 1px solid rgb(160, 160, 160); */
+                display: flex;
+                justify-content: center;
+                overflow: hidden;
+                margin-bottom: 2rem;
+            }
+            .image2 {
+                width: 50%;
+                height: 8rem;
+                /* border: 1px solid rgb(160, 160, 160); */
+                display: flex;
+                justify-content: center;
+                overflow: hidden;
+                margin-bottom: 2rem;
+                margin-left: 25%;
+            }
+            .model {
+                width: 100%;
+                height: 2rem;
+                /* border: 1px solid rgb(160, 160, 160); */
+                display: flex;
+                justify-content: center;
+                /* background-color: aqua; */
+            }
+            .tsk_stock .model {
+                background-color: rgb(171, 241, 241);;
+            }
+            .fg_type {
+                display: flex;
+                justify-content: center;
+                width: 100%;
+                height: 2rem;
+                /* border: 1px solid rgb(160, 160, 160); */
+                /* background-color: aqua; */
+            }
+            .tsk_stock .fg_type {
+                background-color: rgb(171, 241, 241);
+            }
+            .detail_block {
+                width: 100%;
+                height: 4rem;
+                /* border: 1px solid rgb(171, 241, 241); */
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                padding: 4px 4px;
+                /* background-color: aqua; */
+            }
+            .tsk_stock .detail_block {
+                background-color: rgb(171, 241, 241);
+            }
+            .detail_block .stock_qty {
+                display: flex;
+                justify-content: center;
+                width: 100%;
+                height: 2rem;
+                /* border: 1px solid rgb(160, 160, 160); */
+                background-color: white;
+            }
+            .detail_block .stock_cap {
+                display: flex;
+                justify-content: center;
+                width: 100%;
+                height: 2rem;
+                /* border: 1px solid rgb(160, 160, 160); */
+                background-color: white;
+                /* transform: translateY(-6px); */
+            }
+
+            .dnth_stock {
+                width: 20rem;
+                height: 17rem;
+                /* border: 1px solid rgb(160, 160, 160); */
+                border-radius: 8px 8px;
+                position: relative;
+                display: flex;
+                flex-direction: column;
+                left: 8rem;
+                /* bottom: 20rem; */
+            }
+            .dnth_stock .fg_detail {
+                display: flex;
+                justify-content: center;
+                
+                /* border: 1px solid rgb(160, 160, 160); */
+            }
+            .dnth_stock .fg_detail .receive_block {
+                width: 50%;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                background-color: rgb(171, 241, 241);
+                margin-right: 5px;
+                /* border: 1px solid rgb(160, 160, 160); */
+            }
+            .dnth_stock .fg_detail .stock_block {
+                width: 50%;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                background-color: rgb(233, 185, 81);
+                /* border: 1px solid rgb(160, 160, 160); */
+            }
+
+            .ttt_stock {
+                width: 20rem;
+                height: 17rem;
+                /* border: 1px solid rgb(160, 160, 160); */
+                border-radius: 8px 8px;
+                position: relative;
+                display: flex;
+                flex-direction: column;
+                left: 14rem;
+                /* bottom: 20rem; */
+            }
+            .ttt_stock .fg_detail {
+                display: flex;
+                /* flex-direction: column; */
+                justify-content: center;
+                /* border: 1px solid rgb(160, 160, 160); */
+            }
+            .ttt_stock .fg_detail .receive_block {
+                width: 50%;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                background-color: rgb(233, 185, 81);
+                margin-right: 5px;
+                /* border: 1px solid rgb(160, 160, 160); */
+            }
+            .ttt_stock .fg_detail .stock_block {
+                width: 50%;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                background-color: rgb(243, 153, 221);
+                /* border: 1px solid rgb(160, 160, 160); */
+            }
+
+            .nts_stock {
+                width: 20rem;
+                height: 17rem;
+                /* border: 1px solid rgb(160, 160, 160); */
+                border-radius: 8px 8px;
+                position: relative;
+                display: flex;
+                flex-direction: column;
+                left: 20rem;
+            }
+            .nts_stock .fg_detail {
+                display: flex;
+                justify-content: center;
+                /* border: 1px solid rgb(160, 160, 160); */
+            }
+            .nts_stock .fg_detail .receive_block {
+                width: 50%;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                background-color: rgb(243, 153, 221);
+                margin-right: 5px;
+                /* border: 1px solid rgb(160, 160, 160); */
+            }
+            .nts_stock .fg_detail .stock_block {
+                width: 50%;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                background-color: rgb(121, 189, 114);
+                /* border: 1px solid rgb(160, 160, 160); */
+            }
+
+            .mid_block {
+                width: 2rem;
+                height: 10rem;
+                /* border: 2px solid rgb(7, 124, 160); */
+                position: relative;
+                left: 79rem;
+                overflow: hidden;
+                display: flex;
+                justify-content: center;
+            }
+            .bottom_block {
+                width: 100%;
+                height: 70%;
+                /* border: 2px solid rgb(7, 124, 160); */
+                position: relative;
+                display: flex;
+                /* overflow: hidden; */
+            }
+
+            .arrow1 {
+                width: 7rem;
+                height: 2rem;
+                /* border: 3px solid red; */
+                position: absolute;
+                left: 14rem;
+                transform: translateY(4rem);
+            }
+            .arrow2 {
+                width: 7rem;
+                height: 1.5rem;
+                position: absolute;
+                left: 37rem;
+                transform: translateY(4rem);
+            }
+            .arrow3 {
+                width: 7rem;
+                height: 1.5rem;
+                position: absolute;
+                left: 65rem;
+                transform: translateY(4rem);
+            }
+            .arrow4 {
+                width: 7rem;
+                height: 2rem;
+                /* border: 3px solid red; */
+                position: absolute;
+                left: 14rem;
+                transform: translateY(4rem);
+                overflow: hidden;
+            }
+            .bottom_block img {
+                width: 100%;
+                height: 100%;
+            }
+            .arrow5 {
+                width: 7rem;
+                height: 1.5rem;
+                position: absolute;
+                left: 37rem;
+                transform: translateY(4rem);
+            }
+            .arrow6 {
+                width: 7rem;
+                height: 1.5rem;
+                position: absolute;
+                left: 65rem;
+                transform: translateY(4rem);
+            }
+    </style>
+</head>
+<body>
+
+    <%- include('sub_views/header') %>
+
+    <div class="topic">
+        <h1>Smart Supply Chain Diagram</h1>
+    </div>
+
+    <div class="input_model">
+        <!-- <form action="/sdm_chain/submit" method="POST"> -->
+            <label for="model">Select model</label>
+            <select name="model" id="model" class="form-control" onchange="sendOption(this.value)">
+                <option value="">__SELECT__</option>
+                <% sdm_pns.forEach((sdm_pn) => { %> 
+                    <option value="<%= sdm_pn.sdm_pn %>"><%= sdm_pn.sdm_pn %></option>
+                <% }) %>
+            </select>
+        <!-- </form> -->
+    </div>
+
+    <div class="content_container">
+        <div class="top_block">
+
+            <div class="tsk_stock">
+                <div class="image">
+                    <img src="/static/picture/tsk_fac.png" alt="">
+                </div>
+                <div class="model" style="font-weight: bold;">
+                    <p><%= tsk_pn %></p>
+                </div>
+                <div class="fg_type">
+                    <p>Stock FG</p>
+                </div>
+                <div class="detail_block">
+                    <div class="stock_qty">
+                        <%= tsk_stock %>
+                    </div>
+                    <div class="stock_cap">
+                        <%= tsk_cap %> D
+                    </div>
+                </div>
+            </div>
+
+            <div class="dnth_stock">
+                <div class="image2">
+                    <img src="/static/picture/dnth_fac.png" alt="">
+                </div>
+                <div class="fg_detail">
+                    <div class="receive_block">
+                        <div class="model">
+                            <p><%= dnth_old_pn %></p>
+                        </div>
+                        <div class="fg_type">
+                            <p>Receive FG</p>
+                        </div>
+                        <div class="detail_block">
+                            <div class="stock_qty">
+                                <%= dnth_receive %>
+                            </div>
+                            <div class="stock_cap">
+                                <%= dnth_rec_cap %> D
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stock_block">
+                        <div class="model">
+                            <p><%= dnth_new_pn %></p>
+                        </div>
+                        <div class="fg_type">
+                            <p>Stock FG</p>
+                        </div>
+                        <div class="detail_block">
+                            <div class="stock_qty">
+                                <%= dnth_stock %>
+                            </div>
+                            <div class="stock_cap">
+                                <%= dnth_stock_cap %> D
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ttt_stock">
+                <div class="image2">
+                    <img src="/static/picture/ttt_fac.png" alt="">
+                </div>
+                <div class="fg_detail">
+                    <div class="receive_block">
+                        <div class="model">
+                            <p><%= dnth_new_pn %></p>
+                        </div>
+                        <div class="fg_type">
+                            <p>Receive FG</p>
+                        </div>
+                        <div class="detail_block">
+                            <div class="stock_qty">
+                                <%= ttt_rec %>
+                            </div>
+                            <div class="stock_cap">
+                                <%= ttt_rec_cap %> D
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stock_block">
+                        <div class="model">
+                            <p>SM299159-0080LN</p>
+                        </div>
+                        <div class="fg_type">
+                            <p>Stock FG</p>
+                        </div>
+                        <div class="detail_block">
+                            <div class="stock_qty">
+                                4,000
+                            </div>
+                            <div class="stock_cap">
+                                3 D
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+                
+            <div class="nts_stock">
+                <div class="image2">
+                    <img src="/static/picture/nts_fac.png" alt="">
+                </div>
+                <div class="fg_detail">
+                    <div class="receive_block">
+                        <div class="model">
+                            <p>SM299159-0080LN</p>
+                        </div>
+                        <div class="fg_type">
+                            <p>Receive FG</p>
+                        </div>
+                        <div class="detail_block">
+                            <div class="stock_qty">
+                                4,000
+                            </div>
+                            <div class="stock_cap">
+                                3 D
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stock_block">
+                        <div class="model">
+                            <p>SM299156-0220NE</p>
+                        </div>
+                        <div class="fg_type">
+                            <p>Stock FG</p>
+                        </div>
+                        <div class="detail_block">
+                            <div class="stock_qty">
+                                4,000
+                            </div>
+                            <div class="stock_cap">
+                                3 D
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- div arrow image -->
+            <div class="arrow1">
+                <img src="/static/picture/arrow.png" alt="">
+            </div>
+            <!-- div arrow image -->
+            <div class="arrow2">
+                <img src="/static/picture/arrow.png" alt="">
+            </div>
+            <!-- div arrow image -->
+            <div class="arrow3">
+                <img src="/static/picture/arrow.png" alt="">
+            </div>
+
+        </div>
+
+        <div class="mid_block">
+            <img src="/static/picture/vertical_arrow.png" alt="">
+        </div>
+
+        <div class="bottom_block">
+            <div class="tsk_stock">
+                <div class="image">
+                    <img src="/static/picture/sdm_fac.png" alt="">
+                </div>
+                <div class="model" style="font-weight: bold;">
+                    <p><%= sdm_pn_receive %></p>
+                </div>
+                <div class="fg_type">
+                    <p>Stock FG</p>
+                </div>
+                <div class="detail_block">
+                    <div class="stock_qty">
+                        4000
+                    </div>
+                    <div class="stock_cap">
+                        4 D
+                    </div>
+                </div>
+            </div>
+
+            <div class="dnth_stock">
+                <div class="image2">
+                    <img src="/static/picture/skt_fac.png" alt="">
+                </div>
+                <div class="fg_detail">
+                    <div class="receive_block">
+                        <div class="model">
+                            <p>SM299156-0220NK</p>
+                        </div>
+                        <div class="fg_type">
+                            <p>Receive FG</p>
+                        </div>
+                        <div class="detail_block">
+                            <div class="stock_qty">
+                                4000
+                            </div>
+                            <div class="stock_cap">
+                                4 D
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stock_block">
+                        <div class="model">
+                            <p>SM299156-0220NH</p>
+                        </div>
+                        <div class="fg_type">
+                            <p>Stock FG</p>
+                        </div>
+                        <div class="detail_block">
+                            <div class="stock_qty">
+                                4000
+                            </div>
+                            <div class="stock_cap">
+                                3 D
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ttt_stock">
+                <div class="image2">
+                    <img src="/static/picture/dnth2_fac.png" alt="">
+                </div>
+                <div class="fg_detail">
+                    <div class="receive_block">
+                        <div class="model">
+                            <p>SM299156-0220NH</p>
+                        </div>
+                        <div class="fg_type">
+                            <p>Receive FG</p>
+                        </div>
+                        <div class="detail_block">
+                            <div class="stock_qty">
+                                4000
+                            </div>
+                            <div class="stock_cap">
+                                4 D
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stock_block">
+                        <div class="model">
+                            <p>SM299156-0220NH</p>
+                        </div>
+                        <div class="fg_type">
+                            <p>Stock FG</p>
+                        </div>
+                        <div class="detail_block">
+                            <div class="stock_qty">
+                                4,000
+                            </div>
+                            <div class="stock_cap">
+                                3 D
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+                
+            <div class="nts_stock">
+                <div class="image2">
+                    <img src="/static/picture/ttt2_fac.png" alt="">
+                </div>
+                <div class="fg_detail">
+                    <div class="receive_block">
+                        <div class="model">
+                            <p>SM299156-0220NH</p>
+                        </div>
+                        <div class="fg_type">
+                            <p>Receive FG</p>
+                        </div>
+                        <div class="detail_block">
+                            <div class="stock_qty">
+                                4,000
+                            </div>
+                            <div class="stock_cap">
+                                3 D
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stock_block">
+                        <div class="model">
+                            <p>SM299156-0220NE</p>
+                        </div>
+                        <div class="fg_type">
+                            <p>Stock FG</p>
+                        </div>
+                        <div class="detail_block">
+                            <div class="stock_qty">
+                                4,000
+                            </div>
+                            <div class="stock_cap">
+                                3 D
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- div arrow image -->
+            <div class="arrow4">
+                <img src="/static/picture/arrow_L.png" alt="">
+            </div>
+            <!-- div arrow image -->
+            <div class="arrow5">
+                <img src="/static/picture/arrow_L.png" alt="">
+            </div>
+            <!-- div arrow image -->
+            <div class="arrow6">
+                <img src="/static/picture/arrow_L.png" alt="">
+            </div>
+        </div>
+    </div>
+    
+
+    <script>
+        document.getElementById('model').value = '<%= sdm_pn_receive %>';
+
+        function sendOption(selectedOption) {
+            fetch('/sdm_chain/submit', {
+                method: 'POST',
+                headers: {
+                'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ model: selectedOption }),
+            })
+            .then(response => {
+                if (response.redirected) {
+                    // Redirect to the new page
+                    window.location.href = response.url;
+                } else {
+                    return response.json();
+                }
+                })
+                .then(data => {
+                console.log(data); // Handle the response from the server
+                })
+                .catch(error => {
+                console.error('Error:', error);
+                });
+        }
+    </script>
+</body>
+</html>

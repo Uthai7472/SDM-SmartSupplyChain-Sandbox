@@ -12,6 +12,7 @@ const { resolve } = require('dns');
 const { rejects } = require('assert');
 const qrcode = require('qrcode');
 const fs = require('fs');
+const { connect } = require('http2');
 
 const port = 5672;
 
@@ -162,6 +163,16 @@ app.get('/', async (req, res) => {
                 console.log("CREATE tb_partNumber completed");
             }
         });
+        await connection.query(`
+            ALTER TABLE tb_master_packing ADD date_out_pl DATE
+        `, (err, results) => {
+            if(err) {
+                console.log(err);
+            } else {
+                console.log("Add column date/time out pl completed");
+            }
+        });
+
         // await connection.query(`
         //     ALTER TABLE tb_dnth ADD time_out_pl TIME
         // `, (err, results) => {
@@ -315,7 +326,7 @@ app.get('/admin_page/master_setting', isAuthenticated, async (req, res) => {
         //     FROM tb_master_packing
         // `);
         await connection.query(`
-            SELECT qr_packingList, partNumber, partName, qr_box, qty, boxCount, is_fac1_receive
+            SELECT *
             FROM tb_master_packing
         `, (err, results) => {
             if (err) {
@@ -393,7 +404,7 @@ app.get('/admin_page/master_setting/edit', isAuthenticated, async (req, res) => 
         const {qr_box, qr_packingList} = req.query;
 
         await connection.query(`
-            SELECT qr_packingList, partNumber, partName, qr_box, qty, boxCount, is_fac1_receive
+            SELECT *
             FROM tb_master_packing WHERE qr_packingList = ? AND qr_box = ?
         `, [qr_packingList, qr_box], (err, results) => {
             if (err) {
@@ -411,8 +422,13 @@ app.get('/admin_page/master_setting/edit', isAuthenticated, async (req, res) => 
 });
 app.post('/admin_page/master_setting/editing', async (req, res) => {
     try {
-        const {qr_packingList, partNumber, partName, qr_box, qty, is_fac1_receive} = req.body;
-        // connection = await pool.getConnection();
+        const {qr_packingList, partNumber, partName, qr_box, qty, date_out_pl, time_out_pl, is_fac1_receive} = req.body;
+
+        // const [day, month, year] = date_out_pl.split('/');
+
+        // const formattedDate = `${year}-${month}-${day}`;
+        // console.log(formattedDate);
+
         let is_fac1_receive_bit = 0;
         if (is_fac1_receive === '00') {
             // If you change DNTH receive to 0 , go to delete DNTH_data where qr_kanban_in = qr_box
@@ -429,13 +445,14 @@ app.post('/admin_page/master_setting/editing', async (req, res) => {
         else if (is_fac1_receive === '01') {
             is_fac1_receive_bit = 1;
         }
-        console.log(qr_packingList, partNumber, partName, qr_box, qty, is_fac1_receive, is_fac1_receive_bit);
+        console.log(qr_packingList, partNumber, partName, qr_box, qty, date_out_pl, time_out_pl, is_fac1_receive, is_fac1_receive_bit);
 
         await connection.query(`
             UPDATE tb_master_packing SET qr_packingList = ?, partNumber = ?,
-            partName = ?, qty = ?, is_fac1_receive = ? WHERE qr_box = ?
-        `, [qr_packingList, partNumber, partName, qty, is_fac1_receive_bit, qr_box], (err, updateResults) => {
+            partName = ?, qty = ?, time_out_pl = ?, is_fac1_receive = ? WHERE qr_box = ?
+        `, [qr_packingList, partNumber, partName, qty, time_out_pl, is_fac1_receive_bit, qr_box], (err, updateResults) => {
             if (err) {
+                console.log(err);
                 return;
             } else {
                 res.redirect(`/admin_page/master_setting`);
@@ -1665,117 +1682,117 @@ app.get('/create_pl_new/reset_pl', isAuthenticated, async (req, res) => {
 })
 
 
-// ____________________________CREATE PACKING LIST PAGE_______________________________________
-app.get('/create_pl', isAuthenticated, async (req,res) => {
+
+//______________________________SDM OVERALL CHAIN___________________________________
+app.get('/sdm_chain', isAuthenticated, async (req, res) => {
     try {
-        const get_tskDatas = await new Promise((resolve, reject) => {
+        const sdm_pn_receive = req.query.sdm_pn;
+        console.log("SDM PN: ", sdm_pn_receive);
+
+        const sdm_pns = await new Promise((resolve, reject) => {
             connection.query(`
-                SELECT qr_packingList, qr_box, partNumber, qty FROM tb_master_packing
+                SELECT sdm_pn FROM tb_partNumber 
             `, (err, results) => {
                 if (err) {
                     reject(err);
-                    console.log(err);
-                    return;
                 } else {
                     resolve(results);
                 }
             })
-        })
+        });
 
-        console.log(get_tskDatas);
+        // Get TSK data where SDM_PN
+        const tsk_datas = await new Promise((resolve, reject) => {
+            connection.query(`
+                SELECT SUM(qty) AS sumQty, partNumber FROM tb_master_packing
+                WHERE qr_packingList IS NOT NULL AND is_fac1_receive = 0 AND partNumber IN (
+                    SELECT tsk_pn FROM tb_partNumber
+                    WHERE sdm_pn = ?
+                )
+            `, [sdm_pn_receive], (err, results) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(results);
+                }
+            })
+        });
 
-        res.render('create_pl', {get_tskDatas});
+        // Get DNTH receive datas where SDM_PN
+        const dnth_rec_datas = await new Promise((resolve, reject) => {
+            connection.query(`
+                SELECT SUM(qty) AS sumQty, partNumber FROM tb_master_packing
+                WHERE is_fac1_receive = 1 AND partNumber IN (
+                    SELECT tsk_pn FROM tb_partNumber
+                    WHERE sdm_pn = ?
+                )
+            `, [sdm_pn_receive], (err, results) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(results);
+                }
+            });
+        });
 
+        // Get DNTH stock datas where SDM_PN
+        const dnth_stock_datas = await new Promise((resolve, reject) => {
+            connection.query(`
+                SELECT SUM(total_ok_prod) AS sumQty, dnth_partNumber FROM tb_dnth
+                WHERE qr_kanban_out IS NOT NULL AND dnth_pl IS NULL AND dnth_partNumber IN (
+                    SELECT dnth_pn FROM tb_partNumber
+                    WHERE sdm_pn = ?
+                )
+            `, [sdm_pn_receive], (err, results) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(results);
+                }
+            });
+        });
+
+        // Get DNTH stock datas where SDM_PN
+        const ttt_rec_datas = await new Promise((resolve, reject) => {
+            connection.query(`
+                SELECT SUM(total_ok_prod) AS sumQty, dnth_partNumber FROM tb_dnth
+                WHERE dnth_pl IS NOT NULL AND dnth_partNumber IN (
+                    SELECT dnth_pn FROM tb_partNumber
+                    WHERE sdm_pn = ?
+                )
+            `, [sdm_pn_receive], (err, results) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(results);
+                }
+            });
+        });
+
+        console.log("DNTH Stock Data: ", dnth_stock_datas);
+
+        // console.log(sdm_pns);
+
+        res.render('sdm_chain', {sdm_pns, sdm_pn_receive, tsk_stock: tsk_datas[0].sumQty, tsk_cap: tsk_datas[0].sumQty/1000, 
+                                tsk_pn: tsk_datas[0].partNumber, dnth_receive: dnth_rec_datas[0].sumQty, dnth_rec_cap: dnth_rec_datas[0].sumQty/1000,
+                                dnth_old_pn: dnth_rec_datas[0].partNumber, dnth_stock: dnth_stock_datas[0].sumQty, 
+                                dnth_stock_cap: dnth_stock_datas[0].sumQty/1000, dnth_new_pn: dnth_stock_datas[0].dnth_partNumber,
+                                ttt_rec: ttt_rec_datas[0].sumQty, ttt_rec_cap: ttt_rec_datas[0].sumQty/1000});
+         
     } catch (error) {
         console.error('Error : ', error);
         res.status(500).send('Internal Server Error');
     }
 });
-
-
-app.post('/create_pl/update_qr_pl', async (req,res) => {
+app.post('/sdm_chain/submit', async (req, res) => {
     try {
-        const qr_boxes = req.body.qr_box;
-        const qtys = req.body.qty;
-        const partNumbers = req.body.partNumber;
-        const selecteds = req.body.select;
-        const dnth_submit = req.body.dnth_submit;
+        const model = req.body.model;
 
-        console.log("DNTH SUBMIT BTN : ", dnth_submit);
-        // Receive submit button for generate QR PD
-        let uniqueCode = '';
+        // model_new = model + "-new";
+        console.log("Model :", model);
 
-        if (req.body.dnth_submit) {
-            dnthPlCounter++;
-            uniqueCode = 'DNTHPL' + dnthPlCounter.toString().padStart(1, '0');
-            console.log("DNTH CODE: ", uniqueCode);
-            // localStorage.setItem('dnthCounter', dnthCounter);
-        } else if (req.body.ttt_submit) {
-            tttPlCounter++;
-            uniqueCode = 'TTTPL' + tttPlCounter.toString().padStart(1, '0');
-            // localStorage.setItem('tttCounter', tttCounter);
-        } else if (req.body.nts_submit) {
-            ntsPlCounter++;
-            uniqueCode = 'NTSPL' + ntsPlCounter.toString().padStart(1, '0');
-            // localStorage.setItem('ntsCounter', ntsCounter);
-        } else if (req.body.tsk_submit) {
-            tskPlCounter++;
-            uniqueCode = 'TSKPL' + tskPlCounter.toString().padStart(1, '0');
-        }
+        res.redirect(`/sdm_chain?sdm_pn=${model}`);
 
-        console.log('Generate QR Packing List : ', uniqueCode);
-            
-        const updatePromises = [];
-        for (let i = 0; i < selecteds.length; i++) {
-            const rowIndex = selecteds[i];
-            const qr_box = qr_boxes[rowIndex];
-            const qty = qtys[rowIndex];
-            const partNumber = partNumbers[rowIndex];
-
-            console.log('QR Box SELECTED : ', qr_box);
-
-            const updatePromise = await new Promise((resolve, reject) => {
-                connection.query(`
-                    UPDATE tb_master_packing SET qr_packingList = ?
-                    WHERE qr_box = ?
-                `, [uniqueCode, qr_box], (err, results) => {
-                    if (err) {
-                        reject(err);
-                    } else {
-                        // console.log("UPDATE QR PL SUCCESSFULLY");
-                        resolve(results);
-                    }
-                })
-            });
-
-            // console.log("UPDATE QR PL SUCCESSFULLY");
-            updatePromises.push(updatePromise);
-        }
-        console.log("Update QR Packing List successfully");
-        res.redirect('/admin_page/master_setting');
-    } catch (error) {
-        console.error('Error : ', error);
-        res.status(500).send('Internal Server Error');
-    }
-})
-app.get('/create_pl/delete_pl', async (req,res) => {
-    tskPlCounter = 0;
-    dnthPlCounter = 0;
-    tttPlCounter = 0;
-    ntsPlCounter = 0;
-    try {
-        await connection.query(`
-            UPDATE tb_master_packing SET qr_packingList = NULL
-        `, (err, results) => {
-            if (err) {
-                console.log(err);
-                return;
-            } else {
-                console.log('Delete QR Packing List successfully');
-
-                res.redirect('/admin_page/master_setting');
-            }
-        });
     } catch (error) {
         console.error('Error : ', error);
         res.status(500).send('Internal Server Error');

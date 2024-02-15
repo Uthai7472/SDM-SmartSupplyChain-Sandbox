@@ -25,6 +25,8 @@
         <input hidden class="form-control mb-3" type="text" value="<%= master_datas[0].qr_box %>" id="qr_box" name="qr_box">
         <label class="mb-3" for="qty">QTY.</label>
         <input class="form-control mb-3" type="text" value="<%= master_datas[0].qty %>" id="qty" name="qty">
+        <label class="mb-3" for="time_out_pl">Time out PL</label>
+        <input class="form-control mb-3" type="text" step="1" value="<%= master_datas[0].time_out_pl %>" id="time_out_pl" name="time_out_pl">
         <label class="mb-3" for="is_fac1_receive">DNTH Receive</label>
         <input class="form-control mb-3" type="text" value="<%= master_datas.map(data => data.is_fac1_receive.toString('hex')); %>" id="is_fac1_receive" name="is_fac1_receive">
         <button type="submit" class="btn btn-warning">Edit Master Data</button>
