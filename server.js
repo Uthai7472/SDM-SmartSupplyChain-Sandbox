@@ -1701,11 +1701,28 @@ app.get('/sdm_chain', isAuthenticated, async (req, res) => {
             })
         });
 
+        // Get part number for SDM pn
+        let pn_datas = await new Promise((resolve, reject) => {
+            connection.query(`
+                SELECT * FROM tb_partNumber WHERE sdm_pn = ?
+            `, [sdm_pn_receive], (err, results) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(results);
+                }
+            })
+        });
+        console.log("PN datas : ", !pn_datas.length);
+        if (!pn_datas.length) {
+            pn_datas = [{ tsk_pn: '' }]; // Assign a default value
+        }
+
         // Get TSK data where SDM_PN
         const tsk_datas = await new Promise((resolve, reject) => {
             connection.query(`
                 SELECT SUM(qty) AS sumQty, partNumber FROM tb_master_packing
-                WHERE qr_packingList IS NOT NULL AND is_fac1_receive = 0 AND partNumber IN (
+                WHERE qr_packingList IS NOT NULL AND partNumber IN (
                     SELECT tsk_pn FROM tb_partNumber
                     WHERE sdm_pn = ?
                 )
@@ -1721,8 +1738,8 @@ app.get('/sdm_chain', isAuthenticated, async (req, res) => {
         // Get DNTH receive datas where SDM_PN
         const dnth_rec_datas = await new Promise((resolve, reject) => {
             connection.query(`
-                SELECT SUM(qty) AS sumQty, partNumber FROM tb_master_packing
-                WHERE is_fac1_receive = 1 AND partNumber IN (
+                SELECT SUM(qty_kanban_in) AS sumQty, partNumber FROM tb_dnth
+                WHERE qr_kanban_out IS NULL AND partNumber IN (
                     SELECT tsk_pn FROM tb_partNumber
                     WHERE sdm_pn = ?
                 )
@@ -1773,7 +1790,7 @@ app.get('/sdm_chain', isAuthenticated, async (req, res) => {
 
         // console.log(sdm_pns);
 
-        res.render('sdm_chain', {sdm_pns, sdm_pn_receive, tsk_stock: tsk_datas[0].sumQty, tsk_cap: tsk_datas[0].sumQty/1000, 
+        res.render('sdm_chain', {sdm_pns, sdm_pn_receive, pn_datas, tsk_stock: tsk_datas[0].sumQty, tsk_cap: tsk_datas[0].sumQty/1000, 
                                 tsk_pn: tsk_datas[0].partNumber, dnth_receive: dnth_rec_datas[0].sumQty, dnth_rec_cap: dnth_rec_datas[0].sumQty/1000,
                                 dnth_old_pn: dnth_rec_datas[0].partNumber, dnth_stock: dnth_stock_datas[0].sumQty, 
                                 dnth_stock_cap: dnth_stock_datas[0].sumQty/1000, dnth_new_pn: dnth_stock_datas[0].dnth_partNumber,
@@ -1801,6 +1818,114 @@ app.post('/sdm_chain/submit', async (req, res) => {
 
 
 
+// _________________________________INTERNAL CHAIN___________________________________________________
+app.get('/internal_chain', isAuthenticated, async (req, res) => {
+    try {
+        // Get TSK data where SDM_PN
+        const tsk_datas = await new Promise((resolve, reject) => {
+            connection.query(`
+                SELECT SUM(qty) AS sumQty, partNumber FROM tb_master_packing
+                WHERE qr_packingList IS NOT NULL
+                GROUP BY partNumber
+            `, (err, results) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(results);
+                }
+            })
+        });
+        let tsk_pn = [];
+        let tsk_qty = [];
+        let tsk_cap = [];
+        if (tsk_datas.length > 0) {
+            for (let i = 0; i < tsk_datas.length; i++) {
+                tsk_pn[i] = tsk_datas[i].partNumber;
+                tsk_qty[i] = tsk_datas[i].sumQty;
+                tsk_cap[i] = tsk_datas[i].sumQty/1000;
+            }
+
+        } else {
+            tsk_pn = '';
+            tsk_qty = '0';
+            tsk_cap = '0';
+        }
+        console.log("TSK DATAS : ", tsk_datas);
+        
+
+        // Get DNTH receive datas where SDM_PN
+        const dnth_rec_datas = await new Promise((resolve, reject) => {
+            connection.query(`
+                SELECT SUM(qty_kanban_in) AS sumQty, partNumber FROM tb_dnth
+                WHERE qr_kanban_out IS NULL 
+                GROUP BY partNumber
+            `, (err, results) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(results);
+                }
+            });
+        });
+        let dnth_pn_rec = [];
+        let dnth_qty_rec = [];
+        let dnth_cap_rec = [];
+        if (dnth_rec_datas.length > 0) {
+            for (let i = 0; i < tsk_datas.length; i++) {
+                dnth_pn_rec[i] = tsk_datas[i].partNumber;
+                dnth_qty_rec[i] = tsk_datas[i].sumQty;
+                dnth_cap_rec[i] = tsk_datas[i].sumQty/1000;
+            }
+
+        } else {
+            dnth_pn_rec = '';
+            dnth_qty_rec = '0';
+            dnth_cap_rec = '0';
+        }
+        console.log("DNTH PN REC : ", dnth_rec_datas);
+
+        // Get DNTH stock datas where SDM_PN
+        // const dnth_stock_datas = await new Promise((resolve, reject) => {
+        //     connection.query(`
+        //         SELECT SUM(total_ok_prod) AS sumQty, dnth_partNumber FROM tb_dnth
+        //         WHERE qr_kanban_out IS NOT NULL AND dnth_pl IS NULL AND dnth_partNumber IN (
+        //             SELECT dnth_pn FROM tb_partNumber
+        //             WHERE sdm_pn = ?
+        //         )
+        //     `, [sdm_pn_receive], (err, results) => {
+        //         if (err) {
+        //             reject(err);
+        //         } else {
+        //             resolve(results);
+        //         }
+        //     });
+        // });
+
+        // Get DNTH stock datas where SDM_PN
+        // const ttt_rec_datas = await new Promise((resolve, reject) => {
+        //     connection.query(`
+        //         SELECT SUM(total_ok_prod) AS sumQty, dnth_partNumber FROM tb_dnth
+        //         WHERE dnth_pl IS NOT NULL AND dnth_partNumber IN (
+        //             SELECT dnth_pn FROM tb_partNumber
+        //             WHERE sdm_pn = ?
+        //         )
+        //     `, [sdm_pn_receive], (err, results) => {
+        //         if (err) {
+        //             reject(err);
+        //         } else {
+        //             resolve(results);
+        //         }
+        //     });
+        // });
+
+        res.render('internal_chain', {tsk_pn, tsk_qty, tsk_cap,
+                                    dnth_pn_rec, dnth_qty_rec, dnth_cap_rec});
+
+    } catch (error) {
+        console.error('Error : ', error);
+        res.status(500).send('Internal Server Error');
+    }
+})
 
 
 

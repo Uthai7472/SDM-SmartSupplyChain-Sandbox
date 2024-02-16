@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INTERNAL CHAIN</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+    />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        .content_container {
+            width: 110rem;
+            height: 50rem;
+            position: absolute;
+            display: flex;
+            flex-direction: row;
+            justify-content:flex-start;
+            align-items: center;
+            border: 3px solid red;
+        }
+        .rec_supp_block {
+            width: 24rem;
+            height: 100%;
+            border: 1px solid rgb(179, 179, 179);
+            margin-left: 3rem;
+            /* position: absolute; */
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            margin-right: 1rem;
+        }
+        .rec_supp_block .block_topic {
+            width: 100%;
+            height: 3.5rem;
+            border: 1px solid rgb(179, 179, 179);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 28px;
+            font-weight: bold;
+            background-color: rgb(165, 165, 165);
+            padding-top: 5px;
+        }
+        .fg_type {
+            width: 10rem;
+            height: 2rem;
+            /* border: 1px solid rgb(179, 179, 179); */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 22px;
+            font-weight: bold;
+            background-color: rgb(181, 252, 171);
+            margin-top: 1rem;
+            padding-top: 8px;
+        }
+        img {
+            width: 100%;
+            height: 100%;
+        }
+        .image {
+            width: 16rem;
+            height: 9rem;
+            border: 1px solid rgb(179, 179, 179);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            /* background-color: aqua; */
+        }
+        .model1 {
+            width: 16rem;
+            height: 9rem;
+            border: 1px solid rgb(179, 179, 179);
+            display: flex;
+            flex-direction: column;
+            /* justify-content: center; */
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .pn {
+            width: 100%;
+            height: 3rem;
+            font-size: 20px;
+            font-weight: bold;
+            border: 1px solid rgb(179, 179, 179);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding-top: 8px;
+        }
+        .detail {
+            width: 80%;
+            height: 5rem;
+            font-size: 20px;
+            font-weight: bold;
+            border: 1px solid rgb(179, 179, 179);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding-top: 1.3rem;
+        } 
+        .model2 {
+            width: 16rem;
+            height: 9rem;
+            border: 1px solid rgb(179, 179, 179);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .model3 {
+            width: 16rem;
+            height: 9rem;
+            border: 1px solid rgb(179, 179, 179);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .my_fac_block {
+            width: 72rem;
+            height: 100%;
+            /* border: 1px solid rgb(179, 179, 179); */
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+        }
+        .my_fac_block .block_topic {
+            width: 100%;
+            height: 3.5rem;
+            background-color: rgb(144, 223, 236);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 28px;
+            font-weight: bold;
+            padding-top: 10px;
+        }
+        .my_fac_block .my_fac_content {
+            width: 100%;
+            height: 100%;
+            /* border: 3px solid green; */
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+        }
+        .my_fac_block .my_fac_content .my_fac_rec {
+            width: 33%;
+            height: 100%;
+            border: 1px solid rgb(1, 180, 112);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+        }
+
+        .my_fac_block .my_fac_content .my_fac_pd {
+            width: 33%;
+            height: 100%;
+            border: 1px solid rgb(66, 14, 187);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+        }
+        .my_fac_block .my_fac_content .my_fac_stock {
+            width: 33%;
+            height: 100%;
+            border: 1px solid rgb(179, 179, 179);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+        }
+
+        .supp_rec_block {
+            width: 24rem;
+            height: 100%;
+            border: 1px solid rgb(179, 179, 179);
+            margin-left: 1rem;
+            /* position: absolute; */
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            margin-right: 1rem;
+        }
+        .supp_rec_block .block_topic {
+            width: 100%;
+            height: 3.5rem;
+            border: 1px solid rgb(179, 179, 179);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 28px;
+            font-weight: bold;
+            background-color: rgb(165, 165, 165);
+            padding-top: 5px;
+        }
+        .ok_qty {
+            width: 12rem;
+            height: 2rem;
+            background-color: rgb(199, 247, 197);
+            display: flex;
+            justify-content: center;
+            border: 3px solid rgb(184, 184, 184);
+            margin-bottom: 1rem;
+            /* align-items: center; */
+        }
+        .ng_qty {
+            width: 12rem;
+            height: 2rem;
+            background-color: rgb(241, 154, 154);
+            display: flex;
+            justify-content: center;
+            border: 3px solid rgb(184, 184, 184);
+            /* align-items: center; */
+        }
+        
+    </style>
+</head>
+<body>
+
+    <%- include('sub_views/header') %>
+
+    <div class="topic">
+        <h1>DNTH's Stock Visualize</h1>
+    </div>
+
+    <div class="content_container">
+
+        <div class="rec_supp_block">
+            <div class="block_topic">
+                <p>Supplier TSK</p>
+            </div>
+            <div class="fg_type">
+                <p>[Stock FG]</p>
+            </div>
+            <div class="image">
+                <img src="/static/picture/stock.png" alt="">
+            </div>
+            <div class="model1">
+                <div class="pn">
+                    <p><%= tsk_pn[0] %></p>
+                </div>
+                <div class="detail">
+                    <p><%= tsk_qty[0] %></p>
+                    <p><%= tsk_cap[0] %> DAYS</p>
+                </div>
+            </div>
+            <div class="model2">
+                <div class="pn">
+                    <p><%= tsk_pn[1] %></p>
+                </div>
+                <div class="detail">
+                    <p><%= tsk_qty[1] %></p>
+                    <p><%= tsk_cap[1] %> DAYS</p>
+                </div>
+            </div>
+            <div class="model3">
+                <div class="pn">
+                    <p><%= tsk_pn[2] %></p>
+                </div>
+                <div class="detail">
+                    <p><%= tsk_qty[2] %></p>
+                    <p><%= tsk_cap[2] %> DAYS</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Middle -->
+        <div class="my_fac_block">
+            <div class="block_topic">
+                <p>DNTH</p>
+            </div>
+            <div class="my_fac_content">
+                <div class="my_fac_rec">
+                    <div class="fg_type">
+                        <p>[Stock FG]</p>
+                    </div>
+                    <div class="image">
+                        <img src="/static/picture/rec_stock.png" alt="">
+                    </div>
+                    <div class="model1">
+                        <div class="pn">
+                            <p><%= tsk_pn[0] %></p>
+                        </div>
+                        <div class="detail">
+                            <p><%= dnth_qty_rec[0] %></p>
+                            <p><%= dnth_cap_rec[0] %> DAYS</p>
+                        </div>
+                    </div>
+                    <div class="model2">
+                        <div class="pn">
+                            <p><%= tsk_pn[1] %></p>
+                        </div>
+                        <div class="detail">
+                            <p><%= dnth_qty_rec[1] %></p>
+                            <p><%= dnth_cap_rec[1] %> DAYS</p>
+                        </div>
+                    </div>
+                    <div class="model3">
+                        <div class="pn">
+                            <p><%= tsk_pn[2] %></p>
+                        </div>
+                        <div class="detail">
+                            <p><%= dnth_qty_rec[2] %></p>
+                            <p><%= dnth_cap_rec[2] %> DAYS</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="my_fac_pd">
+                    <div class="fg_type" style="background-color: white;">
+                        <!-- <p>[Stock FG]</p> -->
+                    </div>
+                    <div class="image">
+                        <img src="/static/picture/pd.png" alt="">
+                    </div>
+                    <div class="model1">
+                        <div class="pn">
+                            <p>Production</p>
+                        </div>
+                        <div class="detail">
+                            <div class="ok_qty">
+                                <p>Total OK : </p>
+                            </div>
+                            <div class="ng_qty">
+                                <p>Total NG : </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="model2">
+                        <div class="pn">
+                            <!-- <p>SM299159-0010</p> -->
+                        </div>
+                        <div class="detail">
+                            <div class="ok_qty">
+                                <p>Total OK : </p>
+                            </div>
+                            <div class="ng_qty">
+                                <p>Total NG : </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="model3">
+                        <div class="pn">
+                            <!-- <p>SM299159-0010</p> -->
+                        </div>
+                        <div class="detail">
+                            <div class="ok_qty">
+                                <p>Total OK : </p>
+                            </div>
+                            <div class="ng_qty">
+                                <p>Total NG : </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="my_fac_stock">
+                    <div class="fg_type">
+                        <p>[Stock FG]</p>
+                    </div>
+                    <div class="image">
+                        <img src="/static/picture/stock.png" alt="">
+                    </div>
+                    <div class="model1">
+                        <div class="pn">
+                            <p>SM299159-0010</p>
+                        </div>
+                        <div class="detail">
+                            <p>3000</p>
+                            <p>3 D</p>
+                        </div>
+                    </div>
+                    <div class="model2">
+                        <div class="pn">
+                            <p>SM299159-0010</p>
+                        </div>
+                        <div class="detail">
+                            <p>3000</p>
+                            <p>3 D</p>
+                        </div>
+                    </div>
+                    <div class="model3">
+                        <div class="pn">
+                            <p>SM299159-0010</p>
+                        </div>
+                        <div class="detail">
+                            <p>3000</p>
+                            <p>3 D</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT -->
+        <div class="supp_rec_block">
+            <div class="block_topic">
+                <p>Supplier TTT</p>
+            </div>
+            <div class="fg_type">
+                <p>[Stock FG]</p>
+            </div>
+            <div class="image">
+                <img src="/static/picture/rec_stock.png" alt="">
+            </div>
+            <div class="model1">
+                <div class="pn">
+                    <p>SM299159-0010</p>
+                </div>
+                <div class="detail">
+                    <p>3000</p>
+                    <p>3 D</p>
+                </div>
+            </div>
+            <div class="model2">
+                <div class="pn">
+                    <p>SM299159-0010</p>
+                </div>
+                <div class="detail">
+                    <p>3000</p>
+                    <p>3 D</p>
+                </div>
+            </div>
+            <div class="model3">
+                <div class="pn">
+                    <p>SM299159-0010</p>
+                </div>
+                <div class="detail">
+                    <p>3000</p>
+                    <p>3 D</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    
+</body>
+</html>
