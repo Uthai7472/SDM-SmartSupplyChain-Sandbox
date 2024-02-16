@@ -1879,27 +1879,41 @@ app.get('/internal_chain', isAuthenticated, async (req, res) => {
 
         } else {
             dnth_pn_rec = '';
-            dnth_qty_rec = '0';
-            dnth_cap_rec = '0';
+            dnth_qty_rec = ['0', '0', '0'];
+            dnth_cap_rec = ['0', '0', '0'];
         }
         console.log("DNTH PN REC : ", dnth_rec_datas);
 
         // Get DNTH stock datas where SDM_PN
-        // const dnth_stock_datas = await new Promise((resolve, reject) => {
-        //     connection.query(`
-        //         SELECT SUM(total_ok_prod) AS sumQty, dnth_partNumber FROM tb_dnth
-        //         WHERE qr_kanban_out IS NOT NULL AND dnth_pl IS NULL AND dnth_partNumber IN (
-        //             SELECT dnth_pn FROM tb_partNumber
-        //             WHERE sdm_pn = ?
-        //         )
-        //     `, [sdm_pn_receive], (err, results) => {
-        //         if (err) {
-        //             reject(err);
-        //         } else {
-        //             resolve(results);
-        //         }
-        //     });
-        // });
+        const dnth_stock_datas = await new Promise((resolve, reject) => {
+            connection.query(`
+                SELECT SUM(total_ok_prod) AS sumQty, dnth_partNumber FROM tb_dnth
+                WHERE qr_kanban_out IS NOT NULL AND dnth_pl IS NULL
+                GROUP BY dnth_partNumber
+            `, (err, results) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(results);
+                }
+            });
+        });
+        let dnth_pn_stock = [];
+        let dnth_qty_stock = [];
+        let dnth_cap_stock = [];
+        if (dnth_stock_datas.length > 0) {
+            for (let i = 0; i < dnth_stock_datas.length; i++) {
+                dnth_pn_stock[i] = dnth_stock_datas[i].partNumber;
+                dnth_qty_stock[i] = dnth_stock_datas[i].sumQty;
+                dnth_cap_stock[i] = dnth_stock_datas[i].sumQty/1000;
+            }
+
+        } else {
+            dnth_pn_stock = '';
+            dnth_qty_stock = ['0', '0', '0'];
+            dnth_cap_stock = ['0', '0', '0'];
+        }
+        console.log("DNTH PN STOCK : ", dnth_stock_datas);
 
         // Get DNTH stock datas where SDM_PN
         // const ttt_rec_datas = await new Promise((resolve, reject) => {
@@ -1919,7 +1933,8 @@ app.get('/internal_chain', isAuthenticated, async (req, res) => {
         // });
 
         res.render('internal_chain', {tsk_pn, tsk_qty, tsk_cap,
-                                    dnth_pn_rec, dnth_qty_rec, dnth_cap_rec});
+                                    dnth_pn_rec, dnth_qty_rec, dnth_cap_rec,
+                                    dnth_pn_stock, });
 
     } catch (error) {
         console.error('Error : ', error);
